@@ -7,7 +7,6 @@
     android:background="@color/blue"
     tools:context=".LoadCard">
 
-
     <!-- Header -->
     <LinearLayout
         android:id="@+id/header_layout"
@@ -25,14 +24,14 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/Arrow"
+            android:src="@drawable/arrow"
             android:contentDescription="Back" />
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Transactions"
+            android:text="Load Card"
             android:textColor="@color/black"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -66,7 +65,6 @@
                 app:cardBackgroundColor="@color/green"
                 app:cardElevation="4dp">
 
-
                 <!-- Current Balance -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -93,7 +91,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-
             <!-- Select Amount -->
             <TextView
                 android:layout_width="wrap_content"
@@ -113,32 +110,61 @@
                 android:columnOrderPreserved="true"
                 android:useDefaultMargins="true">
 
-                <Button android:id="@+id/btn_amount_50" android:text="₱50" style="@style/AmountButton"
+                <Button
+                    android:id="@+id/btn_amount_50"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="₱50"
                     android:backgroundTint="@color/green"
                     android:textColor="@color/black"/>
 
-                <Button android:id="@+id/btn_amount_100" android:text="₱100" style="@style/AmountButton"
+                <Button
+                    android:id="@+id/btn_amount_100"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="₱100"
                     android:backgroundTint="@color/green"
                     android:textColor="@color/black"/>
 
-                <Button android:id="@+id/btn_amount_200" android:text="₱200" style="@style/AmountButton"
+                <Button
+                    android:id="@+id/btn_amount_200"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="₱200"
                     android:backgroundTint="@color/green"
                     android:textColor="@color/black"/>
 
-                <Button android:id="@+id/btn_amount_500" android:text="₱500" style="@style/AmountButton"
+                <Button
+                    android:id="@+id/btn_amount_500"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="₱500"
                     android:backgroundTint="@color/green"
                     android:textColor="@color/black"/>
 
-                <Button android:id="@+id/btn_amount_1000" android:text="₱1000" style="@style/AmountButton"
+                <Button
+                    android:id="@+id/btn_amount_1000"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="₱1000"
                     android:backgroundTint="@color/green"
                     android:textColor="@color/black"/>
 
-                <Button android:id="@+id/btn_amount_other" android:text="Other" style="@style/AmountButton"
+                <Button
+                    android:id="@+id/btn_amount_other"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:text="Other"
                     android:backgroundTint="@color/green"
                     android:textColor="@color/black"/>
 
             </GridLayout>
-
 
             <!-- Enter Amount -->
             <TextView
@@ -156,7 +182,7 @@
                 android:layout_height="wrap_content"
                 android:visibility="visible"
                 app:hintTextColor="@color/black"
-                app:boxBackgroundColor="@color/black"
+                app:boxBackgroundColor="@color/green"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
@@ -164,11 +190,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Enter Amount (Min: ₱20)"
-                    android:inputType="numberDecimal"
-                    android:textColor="@color/black"
-                    android:background="@color/green"/>
+                    android:inputType="number"
+                    android:textColor="@color/black"/>
             </com.google.android.material.textfield.TextInputLayout>
-
 
             <!-- Payment Method -->
             <TextView
@@ -184,26 +208,31 @@
                 android:id="@+id/rg_payment_methods"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/rounded_background_card"
                 android:padding="8dp">
 
                 <RadioButton
                     android:id="@+id/rb_credit_debit"
-                    android:text="Credit/Debit Card" style="@style/PaymentRadioButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Credit/Debit Card"
                     android:background="@color/green"
                     android:textColor="@color/black"
                     android:padding="8dp"/>
 
                 <RadioButton
                     android:id="@+id/rb_gcash"
-                    android:text="Gcash" style="@style/PaymentRadioButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Gcash"
                     android:background="@color/green"
                     android:textColor="@color/black"
                     android:padding="8dp"/>
 
                 <RadioButton
                     android:id="@+id/rb_maya"
-                    android:text="Maya" style="@style/PaymentRadioButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Maya"
                     android:background="@color/green"
                     android:textColor="@color/black"
                     android:padding="8dp"/>
@@ -212,73 +241,102 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
+
                     <RadioButton
                         android:id="@+id/rb_others"
-                        android:text="Others" style="@style/PaymentRadioButton"
-                        android:textColor="@color/black" /> <LinearLayout
-                    android:id="@+id/layout_other_banks"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone"
-                    android:paddingStart="32dp">
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Others"
+                        android:background="@color/green"
+                        android:textColor="@color/black"
+                        android:padding="8dp"/>
 
-                    <RadioButton android:id="@+id/rb_bdo" android:text="BDO" style="@style/PaymentSubRadioButton" android:textColor="@color/black" />
-                    <RadioButton android:id="@+id/rb_bpi" android:text="BPI" style="@style/PaymentSubRadioButton" android:textColor="@color/black" />
-                    <RadioButton android:id="@+id/rb_metrobank" android:text="Metrobank" style="@style/PaymentSubRadioButton" android:textColor="@color/black" />
-                </LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/layout_other_banks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:paddingStart="32dp"
+                        android:paddingEnd="0dp">
+
+                        <RadioButton
+                            android:id="@+id/rb_bdo"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="BDO"
+                            android:textColor="@color/black"
+                            android:padding="4dp"/>
+
+                        <RadioButton
+                            android:id="@+id/rb_bpi"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="BPI"
+                            android:textColor="@color/black"
+                            android:padding="4dp"/>
+
+                        <RadioButton
+                            android:id="@+id/rb_metrobank"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Metrobank"
+                            android:textColor="@color/black"
+                            android:padding="4dp"/>
+                    </LinearLayout>
                 </LinearLayout>
 
             </RadioGroup>
 
+            <!-- Confirm Button -->
+            <Button
+                android:id="@+id/btn_confirm_load"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Confirm Load"
+                android:backgroundTint="@color/green"
+                android:textColor="@color/black"
+                android:textStyle="bold" />
 
         </LinearLayout>
     </ScrollView>
 
-
     <!-- Bottom Navigation -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
+    <LinearLayout
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/green"
-        app:itemTextColor="@color/black"
-        app:labelVisibilityMode="labeled"
+        android:orientation="horizontal"
+        android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:menu="@menu/bottom_nav_menu"
-        app:elevation="8dp" >
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
+        <Button
+            android:id="@+id/CardDetails_Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Card Details"
+            android:backgroundTint="@color/black"/>
 
-            <Button
-                android:id="@+id/CardDetails_Button"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Card Details"
-                android:backgroundTint="@color/black"/>
+        <Button
+            android:id="@+id/Home_Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Home"
+            android:backgroundTint="@color/black"/>
 
-            <Button
-                android:id="@+id/Home_Button"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Home"
-                android:backgroundTint="@color/black"/>
-
-            <Button
-                android:id="@+id/Profile_Button"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Profile"
-                android:backgroundTint="@color/black"/>
-        </LinearLayout>
-    </com.google.android.material.bottomnavigation.BottomNavigationView>
+        <Button
+            android:id="@+id/Profile_Button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Profile"
+            android:backgroundTint="@color/black"/>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

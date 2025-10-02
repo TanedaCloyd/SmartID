@@ -24,10 +24,11 @@ public class LoadCard extends Fragment {
 
     private TextInputLayout tilCustomAmount;
     private TextInputEditText etCustomAmount;
-    private RadioButton rbOtherAmount;
+    private Button btnOtherAmount;
     private RadioButton rbOthersPayment;
     private LinearLayout layoutOtherBanks;
     private Button btnConfirmLoad;
+    private RadioGroup rgPaymentMethods;
     private Map<Integer, Integer> fixedAmountButtons = new HashMap<>();
     private int selectedLoadAmount = 50; // Default selection
 
@@ -45,6 +46,7 @@ public class LoadCard extends Fragment {
         setupFixedAmountButtons(view);
         setupCustomAmountInput();
         setupPaymentMethodSelection(view);
+        setupBottomNavigation(view);
 
         btnConfirmLoad.setOnClickListener(v -> confirmLoad());
     }
@@ -52,10 +54,11 @@ public class LoadCard extends Fragment {
     private void initializeViews(View view) {
         tilCustomAmount = view.findViewById(R.id.til_custom_amount);
         etCustomAmount = view.findViewById(R.id.et_custom_amount);
-        rbOtherAmount = view.findViewById(R.id.btn_amount_other);
+        btnOtherAmount = view.findViewById(R.id.btn_amount_other);
         rbOthersPayment = view.findViewById(R.id.rb_others);
         layoutOtherBanks = view.findViewById(R.id.layout_other_banks);
         btnConfirmLoad = view.findViewById(R.id.btn_confirm_load);
+        rgPaymentMethods = view.findViewById(R.id.rg_payment_methods);
     }
 
     private void setupFixedAmountButtons(View view) {
@@ -69,105 +72,176 @@ public class LoadCard extends Fragment {
         // Set initial state and click listeners
         for (Map.Entry<Integer, Integer> entry : fixedAmountButtons.entrySet()) {
             Button btn = view.findViewById(entry.getKey());
-            btn.setOnClickListener(v -> handleAmountSelection(v, entry.getValue()));
+            if (btn != null) {
+                btn.setOnClickListener(v -> handleAmountSelection(v, entry.getValue()));
+            }
         }
 
         // Initial button selection (e.g., 50)
-        view.findViewById(R.id.btn_amount_50).setSelected(true);
+        Button btn50 = view.findViewById(R.id.btn_amount_50);
+        if (btn50 != null) {
+            btn50.setSelected(true);
+        }
 
         // Handle 'Other' button
-        rbOtherAmount.setOnClickListener(v -> {
-            tilCustomAmount.setVisibility(View.VISIBLE);
-            selectedLoadAmount = 0; // Clear fixed amount
-            // Visually deselect other buttons
-            for (int id : fixedAmountButtons.keySet()) {
-                view.findViewById(id).setSelected(false);
-            }
-        });
+        if (btnOtherAmount != null) {
+            btnOtherAmount.setOnClickListener(v -> {
+                tilCustomAmount.setVisibility(View.VISIBLE);
+                selectedLoadAmount = 0; // Clear fixed amount
+                btnOtherAmount.setSelected(true);
+                // Visually deselect other buttons
+                for (int id : fixedAmountButtons.keySet()) {
+                    Button btn = view.findViewById(id);
+                    if (btn != null) {
+                        btn.setSelected(false);
+                    }
+                }
+            });
+        }
     }
 
     private void handleAmountSelection(View selectedButton, int amount) {
         // Hide custom input and update selection
         tilCustomAmount.setVisibility(View.GONE);
+        etCustomAmount.setText(""); // Clear custom amount
         selectedLoadAmount = amount;
+
+        // Deselect "Other" button
+        if (btnOtherAmount != null) {
+            btnOtherAmount.setSelected(false);
+        }
 
         // Update visual state of all fixed amount buttons
         for (int id : fixedAmountButtons.keySet()) {
-            View view = getView().findViewById(id);
+            View view = getView();
             if (view != null) {
-                view.setSelected(view.getId() == selectedButton.getId());
+                Button btn = view.findViewById(id);
+                if (btn != null) {
+                    btn.setSelected(btn.getId() == selectedButton.getId());
+                }
             }
         }
     }
 
     private void setupCustomAmountInput() {
-        etCustomAmount.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        if (etCustomAmount != null) {
+            etCustomAmount.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                try {
-                    int amount = Integer.parseInt(s.toString());
-                    if (amount < 20) {
-                        tilCustomAmount.setError("Minimum load amount is ₱20.");
-                        btnConfirmLoad.setEnabled(false);
-                    } else {
-                        tilCustomAmount.setError(null);
-                        selectedLoadAmount = amount;
-                        btnConfirmLoad.setEnabled(true);
-                    }
-                } catch (NumberFormatException e) {
-                    if (s.length() > 0) {
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    try {
+                        if (s.length() > 0) {
+                            int amount = Integer.parseInt(s.toString());
+                            if (amount < 20) {
+                                tilCustomAmount.setError("Minimum load amount is ₱20.");
+                                btnConfirmLoad.setEnabled(false);
+                            } else {
+                                tilCustomAmount.setError(null);
+                                selectedLoadAmount = amount;
+                                btnConfirmLoad.setEnabled(true);
+                            }
+                        } else {
+                            tilCustomAmount.setError(null);
+                            btnConfirmLoad.setEnabled(true);
+                        }
+                    } catch (NumberFormatException e) {
                         tilCustomAmount.setError("Invalid amount.");
                         btnConfirmLoad.setEnabled(false);
-                    } else {
-                        tilCustomAmount.setError(null);
-                        btnConfirmLoad.setEnabled(false); // Disable if empty
                     }
                 }
-            }
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
+
+                @Override
+                public void afterTextChanged(Editable s) {}
+            });
+        }
     }
 
     private void setupPaymentMethodSelection(View view) {
         // Toggle visibility of the local banks when 'Others' is selected
-        rbOthersPayment.setOnClickListener(v -> {
-            boolean isChecked = ((RadioButton) v).isChecked();
-            if (isChecked) {
-                layoutOtherBanks.setVisibility(View.VISIBLE);
-            } else {
-                layoutOtherBanks.setVisibility(View.GONE);
-            }
-        });
+        if (rbOthersPayment != null) {
+            rbOthersPayment.setOnClickListener(v -> {
+                boolean isChecked = ((RadioButton) v).isChecked();
+                if (isChecked && layoutOtherBanks != null) {
+                    layoutOtherBanks.setVisibility(View.VISIBLE);
+                }
+            });
+        }
 
-        // Set up click listeners for the local banks to ensure the 'Others' radio button stays selected
-        RadioGroup rgPaymentMethods = view.findViewById(R.id.rg_payment_methods);
+        // Hide other banks when different payment method is selected
+        if (rgPaymentMethods != null) {
+            rgPaymentMethods.setOnCheckedChangeListener((group, checkedId) -> {
+                if (checkedId != R.id.rb_others && layoutOtherBanks != null) {
+                    layoutOtherBanks.setVisibility(View.GONE);
+                }
+            });
+        }
+
+        // Set up click listeners for the local banks
         RadioButton rbBdo = view.findViewById(R.id.rb_bdo);
         RadioButton rbBpi = view.findViewById(R.id.rb_bpi);
         RadioButton rbMetrobank = view.findViewById(R.id.rb_metrobank);
 
         View.OnClickListener bankClickListener = v -> {
-            rgPaymentMethods.check(rbOthersPayment.getId());
-            // Optionally store the selected bank name
+            if (rgPaymentMethods != null && rbOthersPayment != null) {
+                rgPaymentMethods.check(rbOthersPayment.getId());
+            }
         };
 
-        rbBdo.setOnClickListener(bankClickListener);
-        rbBpi.setOnClickListener(bankClickListener);
-        rbMetrobank.setOnClickListener(bankClickListener);
+        if (rbBdo != null) rbBdo.setOnClickListener(bankClickListener);
+        if (rbBpi != null) rbBpi.setOnClickListener(bankClickListener);
+        if (rbMetrobank != null) rbMetrobank.setOnClickListener(bankClickListener);
+    }
+
+    private void setupBottomNavigation(View view) {
+        Button btnCardDetails = view.findViewById(R.id.CardDetails_Button);
+        Button btnHome = view.findViewById(R.id.Home_Button);
+        Button btnProfile = view.findViewById(R.id.Profile_Button);
+
+        if (btnCardDetails != null) {
+            btnCardDetails.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Show Card Details", Toast.LENGTH_SHORT).show();
+                // Navigate to Card Details
+            });
+        }
+
+        if (btnHome != null) {
+            btnHome.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Go to Home", Toast.LENGTH_SHORT).show();
+                // Navigate to Home
+            });
+        }
+
+        if (btnProfile != null) {
+            btnProfile.setOnClickListener(v -> {
+                Toast.makeText(getContext(), "Go to Profile", Toast.LENGTH_SHORT).show();
+                // Navigate to Profile
+            });
+        }
     }
 
     private void confirmLoad() {
-        String paymentMethod = "Not Selected"; // Get selected radio button text
+        // Get selected payment method
+        String paymentMethod = "Not Selected";
+        if (rgPaymentMethods != null) {
+            int selectedId = rgPaymentMethods.getCheckedRadioButtonId();
+            if (selectedId != -1) {
+                RadioButton selectedRb = getView().findViewById(selectedId);
+                if (selectedRb != null) {
+                    paymentMethod = selectedRb.getText().toString();
+                }
+            }
+        }
 
         // Basic validation and confirmation
-        if (selectedLoadAmount < 20 && tilCustomAmount.getVisibility() == View.VISIBLE) {
+        if (selectedLoadAmount < 20) {
             Toast.makeText(getContext(), "Please enter a valid amount (Min ₱20).", Toast.LENGTH_SHORT).show();
             return;
-        } else if (selectedLoadAmount == 0 && tilCustomAmount.getVisibility() == View.GONE) {
-            Toast.makeText(getContext(), "Please select a load amount.", Toast.LENGTH_SHORT).show();
+        }
+
+        if (paymentMethod.equals("Not Selected")) {
+            Toast.makeText(getContext(), "Please select a payment method.", Toast.LENGTH_SHORT).show();
             return;
         }
 

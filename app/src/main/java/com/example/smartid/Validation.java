@@ -20,7 +20,7 @@ public class Validation extends AppCompatActivity {
     private ImageView profileImage;
     private TextView tvUserName, tvStudentId;
     private Button btnProofEnrollment, btnSubmit;
-    private LinearLayout cardDetailsButton, homeButton, profileButton;
+    private Button cardDetailsButton, homeButton, profileButton;
 
     // User data
     private String userName = "Cloyd Harley V. Taneda";
@@ -56,33 +56,47 @@ public class Validation extends AppCompatActivity {
 
     private void setupClickListeners() {
         // Back button - return to previous screen
-        btnBack.setOnClickListener(v -> finish());
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> finish());
+        }
 
         // Proof of Enrollment button - open document picker
-        btnProofEnrollment.setOnClickListener(v -> openDocumentPicker());
+        if (btnProofEnrollment != null) {
+            btnProofEnrollment.setOnClickListener(v -> openDocumentPicker());
+        }
 
         // Submit button - process validation
-        btnSubmit.setOnClickListener(v -> submitValidation());
+        if (btnSubmit != null) {
+            btnSubmit.setOnClickListener(v -> submitValidation());
+        }
 
         // Profile image click - option to change profile picture
-        profileImage.setOnClickListener(v ->
-                Toast.makeText(this, "Profile picture functionality coming soon", Toast.LENGTH_SHORT).show());
+        if (profileImage != null) {
+            profileImage.setOnClickListener(v ->
+                    Toast.makeText(this, "Profile picture functionality coming soon", Toast.LENGTH_SHORT).show());
+        }
     }
 
     private void setupBottomNavigation() {
         // Card Details button
-        cardDetailsButton.setOnClickListener(v ->
-                Toast.makeText(this, "Show Card Details", Toast.LENGTH_SHORT).show());
+        if (cardDetailsButton != null) {
+            cardDetailsButton.setOnClickListener(v ->
+                    Toast.makeText(this, "Show Card Details", Toast.LENGTH_SHORT).show());
+        }
 
         // Home button
-        homeButton.setOnClickListener(v -> {
-            startActivity(new Intent(Validation.this, HomePage.class));
-            finish();
-        });
+        if (homeButton != null) {
+            homeButton.setOnClickListener(v -> {
+                startActivity(new Intent(Validation.this, HomePage.class));
+                finish();
+            });
+        }
 
         // Profile button
-        profileButton.setOnClickListener(v ->
-                Toast.makeText(this, "Go to Profile Page", Toast.LENGTH_SHORT).show());
+        if (profileButton != null) {
+            profileButton.setOnClickListener(v ->
+                    Toast.makeText(this, "Go to Profile Page", Toast.LENGTH_SHORT).show());
+        }
     }
 
     private void setupDocumentPicker() {
@@ -100,8 +114,12 @@ public class Validation extends AppCompatActivity {
 
     private void loadUserData() {
         // Load user data (in a real app, this would come from SharedPreferences, database, or API)
-        tvUserName.setText(userName);
-        tvStudentId.setText("Student ID: " + studentId);
+        if (tvUserName != null) {
+            tvUserName.setText(userName);
+        }
+        if (tvStudentId != null) {
+            tvStudentId.setText("Student ID: " + studentId);
+        }
     }
 
     private void openDocumentPicker() {
@@ -119,7 +137,9 @@ public class Validation extends AppCompatActivity {
         String fileName = getFileName(uri);
 
         // Update button text to show selected file
-        btnProofEnrollment.setText("📁  " + (fileName != null ? fileName : "Document Selected"));
+        if (btnProofEnrollment != null) {
+            btnProofEnrollment.setText("Document: " + (fileName != null ? fileName : "Selected"));
+        }
 
         Toast.makeText(this, "Document selected: " + (fileName != null ? fileName : "Unknown"),
                 Toast.LENGTH_SHORT).show();
@@ -141,8 +161,10 @@ public class Validation extends AppCompatActivity {
 
     private void processValidationSubmission() {
         // Simulate processing time
-        btnSubmit.setEnabled(false);
-        btnSubmit.setText("Processing...");
+        if (btnSubmit != null) {
+            btnSubmit.setEnabled(false);
+            btnSubmit.setText("Processing...");
+        }
 
         // Simulate network request (replace with actual API call)
         new Thread(() -> {
@@ -151,16 +173,20 @@ public class Validation extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     // Reset button state
-                    btnSubmit.setEnabled(true);
-                    btnSubmit.setText("Submit");
+                    if (btnSubmit != null) {
+                        btnSubmit.setEnabled(true);
+                        btnSubmit.setText("Submit");
+                    }
 
                     // Show success message
                     showValidationSuccess();
                 });
             } catch (InterruptedException e) {
                 runOnUiThread(() -> {
-                    btnSubmit.setEnabled(true);
-                    btnSubmit.setText("Submit");
+                    if (btnSubmit != null) {
+                        btnSubmit.setEnabled(true);
+                        btnSubmit.setText("Submit");
+                    }
                     Toast.makeText(this, "Submission failed. Please try again.",
                             Toast.LENGTH_LONG).show();
                 });
@@ -175,7 +201,9 @@ public class Validation extends AppCompatActivity {
 
         // Reset the form
         selectedDocumentUri = null;
-        btnProofEnrollment.setText("📁  Proof of Enrollment / Registration");
+        if (btnProofEnrollment != null) {
+            btnProofEnrollment.setText("Proof of Enrollment / Registration");
+        }
 
         // Optionally navigate back to home
         // finish();
@@ -183,7 +211,7 @@ public class Validation extends AppCompatActivity {
 
     private String getFileName(Uri uri) {
         String result = null;
-        if (uri.getScheme().equals("content")) {
+        if (uri.getScheme() != null && uri.getScheme().equals("content")) {
             try (android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
                     int nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
@@ -197,9 +225,11 @@ public class Validation extends AppCompatActivity {
         }
         if (result == null) {
             result = uri.getPath();
-            int cut = result.lastIndexOf('/');
-            if (cut != -1) {
-                result = result.substring(cut + 1);
+            if (result != null) {
+                int cut = result.lastIndexOf('/');
+                if (cut != -1) {
+                    result = result.substring(cut + 1);
+                }
             }
         }
         return result;
