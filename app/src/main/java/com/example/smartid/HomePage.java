@@ -35,6 +35,7 @@ public class HomePage extends AppCompatActivity {
         // Ensure 'Home' is selected visually when this activity loads
         bottomNav.setSelectedItemId(R.id.Home_Button);
 
+        // --- THIS IS THE FIXED NAVIGATION ---
         bottomNav.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
 
@@ -43,14 +44,14 @@ public class HomePage extends AppCompatActivity {
                 Toast.makeText(this, "Welcome Home!", Toast.LENGTH_SHORT).show();
                 return true;
             } else if (itemId == R.id.Profile_Button) {
-                // In a real app, you would start a new Activity or replace a Fragment.
-                Toast.makeText(this, "Go to Profile Page", Toast.LENGTH_SHORT).show();
-                // Example of navigation to a new activity (ProfilePageActivity)
-                // startActivity(new Intent(HomePage.this, ProfilePageActivity.class));
+                // START THE PROFILE ACTIVITY
+                startActivity(new Intent(HomePage.this, Profile.class));
                 return true;
             } else if (itemId == R.id.CardDetails_Button) {
                 // Placeholder for Card Details view
                 Toast.makeText(this, "Show Card Details", Toast.LENGTH_SHORT).show();
+                // Example:
+                // startActivity(new Intent(HomePage.this, CardDetailsActivity.class));
                 return true;
             }
             return false;
@@ -58,16 +59,22 @@ public class HomePage extends AppCompatActivity {
     }
 
     /**
-     * Placeholder for navigating to the secondary pages (Load Card, Transactions, etc.).
-     * In a single-Activity structure, this usually loads a new Activity or uses Fragments.
+     * Navigates to the secondary pages (Load Card, Transactions, etc.).
      * @param screenName The name of the screen to navigate to.
      */
+    // --- THIS IS THE FIXED NAVIGATION METHOD ---
     private void navigateToScreen(String screenName) {
         Toast.makeText(this, "Navigating to " + screenName + "...", Toast.LENGTH_SHORT).show();
-        // Example: If you built the other pages as Activities:
-        // if (screenName.equals("Load Card")) {
-        //     startActivity(new Intent(HomePage.this, LoadCardActivity.class));
-        // }
+
+        // Start the correct Activity based on the button pressed
+        if (screenName.equals("Load Card")) {
+            startActivity(new Intent(HomePage.this, LoadCard.class));
+        } else if (screenName.equals("Transactions")) {
+            startActivity(new Intent(HomePage.this, Transactions.class));
+        } else if (screenName.equals("Validation")) {
+            startActivity(new Intent(HomePage.this, Validation.class));
+        } else if (screenName.equals("Rewards")) {
+            startActivity(new Intent(HomePage.this, Rewards.class));
+        }
     }
 }
-

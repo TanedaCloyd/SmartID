@@ -20,7 +20,7 @@ public class Validation extends AppCompatActivity {
     private ImageView profileImage;
     private TextView tvUserName, tvStudentId;
     private Button btnProofEnrollment, btnSubmit;
-    private LinearLayout cardDetailsButton, homeButton, profileButton;
+    private Button cardDetailsButton, homeButton, profileButton;
 
     // User data
     private String userName = "Cloyd Harley V. Taneda";

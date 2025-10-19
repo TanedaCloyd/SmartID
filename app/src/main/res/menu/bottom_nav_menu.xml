@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/CardDetails_Button"
+        android:title="Card Details"
+        android:icon="@drawable/ic_baseline_credit_card_24" />
+    <item
+        android:id="@+id/Home_Button"
+        android:title="Home"
+        android:icon="@drawable/ic_baseline_home_24" />
+    <item
+        android:id="@+id/Profile_Button"
+        android:title="Profile"
+        android:icon="@drawable/ic_baseline_account_person_24" />
+</menu>

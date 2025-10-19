@@ -7,8 +7,6 @@
     android:background="@color/blue"
     tools:context=".HomePage">
 
-    <!-- Bottom Navigation View (Tab Bar) -->
-
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -26,17 +24,15 @@
             android:orientation="vertical"
             android:padding="40dp">
 
-            <!-- 1. LOGO/HEADER -->
             <ImageView
                 android:id="@+id/iv_logo"
                 android:layout_width="309dp"
                 android:layout_height="214dp"
                 android:layout_marginTop="32dp"
                 android:contentDescription="SmartID Logo"
-                android:src="@drawable/SmartID_Logo" />
+                android:src="@drawable/smartid_logo" />
 
 
-            <!-- 2. FOUR ACTION BUTTONS GRID -->
             <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -46,7 +42,6 @@
                 android:rowCount="2"
                 android:useDefaultMargins="true">
 
-                <!-- Button 1: Load Card -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btn_load_card"
                     style="@style/Widget.Material3.CardView.Elevated"
@@ -68,7 +63,7 @@
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:contentDescription="Load Card Icon"
-                            android:src="@drawable/Load_Card"
+                            android:src="@drawable/load_card"
                             app:tint="@color/black" />
 
                         <TextView
@@ -81,7 +76,6 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Button 2: Transactions -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btn_transactions"
                     style="@style/Widget.Material3.CardView.Elevated"
@@ -103,7 +97,7 @@
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:contentDescription="Transactions Icon"
-                            android:src="@drawable/Transactions"
+                            android:src="@drawable/transactions"
                             app:tint="@color/black" />
 
                         <TextView
@@ -116,7 +110,6 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Button 3: Validation -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btn_validation"
                     style="@style/Widget.Material3.CardView.Elevated"
@@ -139,7 +132,7 @@
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:contentDescription="Validation Icon"
-                            android:src="@drawable/Validation" />
+                            android:src="@drawable/validation" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -151,7 +144,6 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Button 4: Rewards -->
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btn_rewards"
                     style="@style/Widget.Material3.CardView.Elevated"
@@ -174,7 +166,7 @@
                             android:layout_width="48dp"
                             android:layout_height="48dp"
                             android:contentDescription="Rewards Icon"
-                            android:src="@drawable/Rewards"
+                            android:src="@drawable/rewards"
                             app:tint="@color/black" />
 
                         <TextView
@@ -196,7 +188,6 @@
     </ScrollView>
 
 
-    <!--Bottom Navigation Bar: All Pages.-->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
@@ -208,36 +199,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:menu="@menu/bottom_nav_menu"
-        app:elevation="8dp" >
+        app:elevation="8dp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/CardDetails_Button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Card Details"
-                android:backgroundTint="@color/black"/>
-
-            <Button
-                android:id="@+id/Home_Button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Home"
-                android:backgroundTint="@color/black"/>
-
-            <Button
-                android:id="@+id/Profile_Button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Profile"
-                android:backgroundTint="@color/black"/>
-        </LinearLayout>
-    </com.google.android.material.bottomnavigation.BottomNavigationView>
 </androidx.constraintlayout.widget.ConstraintLayout>
