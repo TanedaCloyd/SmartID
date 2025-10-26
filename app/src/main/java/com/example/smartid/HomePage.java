@@ -20,13 +20,11 @@ public class HomePage extends AppCompatActivity {
         MaterialCardView btnLoadCard = findViewById(R.id.btn_load_card);
         MaterialCardView btnTransactions = findViewById(R.id.btn_transactions);
         MaterialCardView btnValidation = findViewById(R.id.btn_validation);
-        MaterialCardView btnRewards = findViewById(R.id.btn_rewards);
 
         // Set click listeners for the main action buttons
         btnLoadCard.setOnClickListener(v -> navigateToScreen("Load Card"));
         btnTransactions.setOnClickListener(v -> navigateToScreen("Transactions"));
         btnValidation.setOnClickListener(v -> navigateToScreen("Validation"));
-        btnRewards.setOnClickListener(v -> navigateToScreen("Rewards"));
 
         // --- 2. Setup Bottom Navigation Bar (Tab Bar) ---
 

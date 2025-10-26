@@ -7,7 +7,6 @@
     android:background="@color/blue"
     tools:context=".Profile">
 
-    <!-- Header -->
     <LinearLayout
         android:id="@+id/header_layout"
         android:layout_width="match_parent"
@@ -42,7 +41,6 @@
             android:layout_height="40dp" />
     </LinearLayout>
 
-    <!-- Content ScrollView -->
     <ScrollView
         android:id="@+id/scroll_view_content"
         android:layout_width="0dp"
@@ -51,263 +49,83 @@
         app:layout_constraintTop_toBottomOf="@id/header_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
+        app:layout_constraintBottom_toBottomOf="parent"> <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_horizontal">
+
+        <ImageView
+            android:id="@+id/profile_image"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="24dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_baseline_account_person_24" android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/tv_user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Cloyd Harley V. Taneda" android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/tv_institution"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Technological Institute of the Philippines" android:textColor="@color/black"
+            android:textSize="12sp"
+            android:layout_marginBottom="4dp"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/tv_student_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Student ID: 2025-12345" android:textColor="@color/black"
+            android:textSize="12sp"
+            android:layout_marginBottom="40dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="32dp"
-            android:gravity="center_horizontal">
+            android:layout_marginBottom="40dp">
 
-            <!-- Profile Picture -->
-            <ImageView
-                android:id="@+id/profile_image"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="24dp"
-                android:scaleType="centerInside"
-                android:clickable="true"
-                android:focusable="true" />
-
-            <!-- User Name -->
-            <TextView
-                android:id="@+id/tv_user_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cloyd Harley V. Taneda"
-                android:textColor="@color/black"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp" />
-
-            <!-- Institution -->
-            <TextView
-                android:id="@+id/tv_institution"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Technological Institute of the Philippines"
-                android:textColor="@color/black"
-                android:textSize="12sp"
-                android:layout_marginBottom="4dp"
-                android:gravity="center" />
-
-            <!-- Student ID -->
-            <TextView
-                android:id="@+id/tv_student_id"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Student ID: 2025-12345"
-                android:textColor="@color/black"
-                android:textSize="12sp"
-                android:layout_marginBottom="40dp" />
-
-            <!-- Profile Menu Items -->
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:layout_marginBottom="40dp">
+                android:id="@+id/menu_edit_profile"
+                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon" android:text="⚙️"/>
+                <TextView style="@style/ProfileMenuItemText" android:text="Edit Profile"/>
+                <TextView style="@style/ProfileMenuItemArrow" android:text="&gt;"/> </LinearLayout>
 
-                <!-- Edit Profile -->
-                <LinearLayout
-                    android:id="@+id/menu_edit_profile"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:background="@color/green"
-                    android:padding="16dp"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="2dp"
-                    android:clickable="true"
-                    android:focusable="true">
+            <LinearLayout
+                android:id="@+id/menu_notifications"
+                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon" android:text="🔔"/>
+                <TextView style="@style/ProfileMenuItemText" android:text="Notifications"/>
+                <TextView style="@style/ProfileMenuItemArrow" android:text="&gt;"/> </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="⚙️"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="12dp" />
+            <LinearLayout
+                android:id="@+id/menu_security"
+                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon" android:text="🛡️"/>
+                <TextView style="@style/ProfileMenuItemText" android:text="Security"/>
+                <TextView style="@style/ProfileMenuItemArrow" android:text="&gt;"/> </LinearLayout>
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Edit Profile"
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=">"
-                        android:textColor="@color/black"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- Notifications -->
-                <LinearLayout
-                    android:id="@+id/menu_notifications"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:background="@color/green"
-                    android:padding="16dp"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="2dp"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🔔"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="12dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Notifications"
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=">"
-                        android:textColor="@color/black"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- Security -->
-                <LinearLayout
-                    android:id="@+id/menu_security"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:background="@color/green"
-                    android:padding="16dp"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="2dp"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="🛡️"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="12dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Security"
-                        android:textColor="@color/black"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=">"
-                        android:textColor="@color/black"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-                <!-- Log Out -->
-                <LinearLayout
-                    android:id="@+id/menu_log_out"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:orientation="horizontal"
-                    android:background="@color/green"
-                    android:padding="16dp"
-                    android:gravity="center_vertical"
-                    android:clickable="true"
-                    android:focusable="true">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="↪️"
-                        android:textSize="20sp"
-                        android:layout_marginEnd="12dp" />
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Log Out"
-                        android:textColor="@android:color/holo_red_dark"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text=">"
-                        android:textColor="@color/black"
-                        android:textSize="15sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-
-            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/menu_log_out"
+                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon" android:text="↪️"/>
+                <TextView style="@style/ProfileMenuItemText"
+                    android:text="Log Out"
+                    android:textColor="@android:color/holo_red_dark"/> <TextView style="@style/ProfileMenuItemArrow" android:text="&gt;"/> </LinearLayout>
 
         </LinearLayout>
-    </ScrollView>
-
-    <!-- Bottom Navigation -->
-    <LinearLayout
-        android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/green"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <Button
-            android:id="@+id/CardDetails_Button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Card Details"
-            android:backgroundTint="@color/black"
-            android:textColor="@color/white" />
-
-        <Button
-            android:id="@+id/Home_Button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Home"
-            android:backgroundTint="@color/black"
-            android:textColor="@color/white" />
-
-        <Button
-            android:id="@+id/Profile_Button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Profile"
-            android:backgroundTint="@color/black"
-            android:textColor="@color/white" />
 
     </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

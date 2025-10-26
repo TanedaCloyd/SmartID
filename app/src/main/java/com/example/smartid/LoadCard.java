@@ -1,5 +1,6 @@
 package com.example.smartid;
 
+import android.content.Intent;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,6 +8,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button; // Keep Button
+import android.widget.ImageButton; // Import ImageButton for back button
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.LinearLayout;
@@ -21,11 +23,11 @@ public class LoadCard extends AppCompatActivity {
 
     private TextInputLayout tilCustomAmount;
     private TextInputEditText etCustomAmount;
-    // --- FIX 1: Change variable type and name ---
     private Button btnOtherAmount; // Changed from RadioButton rbOtherAmount
     private RadioButton rbOthersPayment;
     private LinearLayout layoutOtherBanks;
     private Button btnConfirmLoad;
+    private ImageButton btnBack; // Added Back Button
     private Map<Integer, Integer> fixedAmountButtons = new HashMap<>();
     private int selectedLoadAmount = 50; // Default selection
 
@@ -35,9 +37,15 @@ public class LoadCard extends AppCompatActivity {
         setContentView(R.layout.activity_load);
 
         initializeViews();
+        setupBackButton(); // Added setup for back button
         setupFixedAmountButtons();
         setupCustomAmountInput();
         setupPaymentMethodSelection();
+
+        // Set initial state based on default selection (₱50)
+        handleAmountSelection(findViewById(R.id.btn_amount_50), 50); // Ensure initial UI state matches default
+        // Ensure confirm button is enabled/disabled correctly on start
+        updateConfirmButtonState();
 
         btnConfirmLoad.setOnClickListener(v -> confirmLoad());
     }
@@ -45,12 +53,20 @@ public class LoadCard extends AppCompatActivity {
     private void initializeViews() {
         tilCustomAmount = findViewById(R.id.til_custom_amount);
         etCustomAmount = findViewById(R.id.et_custom_amount);
-        // --- FIX 2: Use the new variable name ---
-        btnOtherAmount = findViewById(R.id.btn_amount_other); // Changed from rbOtherAmount
+        btnOtherAmount = findViewById(R.id.btn_amount_other);
         rbOthersPayment = findViewById(R.id.rb_others);
         layoutOtherBanks = findViewById(R.id.layout_other_banks);
         btnConfirmLoad = findViewById(R.id.btn_confirm_load);
+        btnBack = findViewById(R.id.btn_back); // Initialize back button
     }
+
+    // --- Added Back Button Logic ---
+    private void setupBackButton() {
+        btnBack.setOnClickListener(v -> {
+            finish(); // Closes this activity and returns to the previous one (HomePage)
+        });
+    }
+    // -----------------------------
 
     private void setupFixedAmountButtons() {
         // Map button IDs to their amounts
@@ -63,24 +79,27 @@ public class LoadCard extends AppCompatActivity {
         // Set initial state and click listeners
         for (Map.Entry<Integer, Integer> entry : fixedAmountButtons.entrySet()) {
             Button btn = findViewById(entry.getKey());
-            btn.setOnClickListener(v -> handleAmountSelection(v, entry.getValue()));
+            // Make sure btn is not null before setting listener
+            if (btn != null) {
+                btn.setOnClickListener(v -> handleAmountSelection(v, entry.getValue()));
+            }
         }
 
-        // Initial button selection (e.g., 50)
-        findViewById(R.id.btn_amount_50).setSelected(true);
-
         // Handle 'Other' button
-        // --- FIX 3: Use the new variable name ---
-        btnOtherAmount.setOnClickListener(v -> { // Changed from rbOtherAmount
+        btnOtherAmount.setOnClickListener(v -> {
             tilCustomAmount.setVisibility(View.VISIBLE);
+            etCustomAmount.requestFocus(); // Focus the input field
             selectedLoadAmount = 0; // Clear fixed amount
             // Visually deselect other buttons
             for (int id : fixedAmountButtons.keySet()) {
-                findViewById(id).setSelected(false);
+                View fixedBtn = findViewById(id);
+                if (fixedBtn != null) {
+                    fixedBtn.setSelected(false);
+                }
             }
             // Also need to visually mark the "Other" button as selected
-            // (assuming your AmountButton style handles the selected state visually)
-            btnOtherAmount.setSelected(true); // Added this line
+            btnOtherAmount.setSelected(true);
+            updateConfirmButtonState(); // Update button state based on custom input
         });
     }
 
@@ -99,7 +118,8 @@ public class LoadCard extends AppCompatActivity {
             }
         }
         // Also deselect the "Other" button
-        btnOtherAmount.setSelected(false); // Added this line
+        btnOtherAmount.setSelected(false);
+        updateConfirmButtonState(); // Confirm button should be enabled if a fixed amount is selected
     }
 
     private void setupCustomAmountInput() {
@@ -110,54 +130,54 @@ public class LoadCard extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 if (tilCustomAmount.getVisibility() != View.VISIBLE) {
-                    return; // Only validate if the custom field is visible
+                    return; // Only process if the custom field is visible
                 }
-                try {
-                    // Prevent leading zeros unless it's the only digit
-                    String input = s.toString();
-                    if (input.length() > 1 && input.startsWith("0")) {
-                        input = input.substring(1);
-                        etCustomAmount.setText(input);
-                        etCustomAmount.setSelection(input.length()); // Move cursor to end
-                    }
-
-                    if (input.isEmpty()) {
-                        tilCustomAmount.setError(null); // Clear error if empty
-                        btnConfirmLoad.setEnabled(false); // Disable if empty
-                        selectedLoadAmount = 0; // Reset selected amount
-                        return;
-                    }
-
-                    int amount = Integer.parseInt(input);
-                    if (amount < 20) {
-                        tilCustomAmount.setError("Minimum load amount is ₱20.");
-                        btnConfirmLoad.setEnabled(false);
-                        selectedLoadAmount = 0; // Reset selected amount if invalid
-                    } else {
-                        tilCustomAmount.setError(null);
-                        selectedLoadAmount = amount; // Update selected amount only if valid
-                        btnConfirmLoad.setEnabled(true);
-                    }
-                } catch (NumberFormatException e) {
-                    // This handles cases where the input might become non-numeric temporarily
-                    // during typing, or if it exceeds Integer.MAX_VALUE
-                    tilCustomAmount.setError("Invalid amount.");
-                    btnConfirmLoad.setEnabled(false);
-                    selectedLoadAmount = 0; // Reset selected amount
-                }
+                updateConfirmButtonState(); // Update based on current input
             }
             @Override
             public void afterTextChanged(Editable s) {}
         });
-        // Initially disable button if custom amount field is visible but empty
-        if (tilCustomAmount.getVisibility() == View.VISIBLE && etCustomAmount.getText().toString().isEmpty()) {
-            btnConfirmLoad.setEnabled(false);
+    }
+
+    // Helper method to enable/disable confirm button based on amount selection
+    private void updateConfirmButtonState() {
+        boolean isCustomAmountVisible = tilCustomAmount.getVisibility() == View.VISIBLE;
+        boolean isValid = false;
+
+        if (isCustomAmountVisible) {
+            String input = etCustomAmount.getText().toString();
+            if (!input.isEmpty()) {
+                try {
+                    int amount = Integer.parseInt(input);
+                    if (amount >= 20) {
+                        isValid = true;
+                        tilCustomAmount.setError(null); // Clear error if valid
+                        selectedLoadAmount = amount; // Update selected amount
+                    } else {
+                        tilCustomAmount.setError("Minimum load amount is ₱20.");
+                        selectedLoadAmount = 0; // Reset amount if invalid
+                    }
+                } catch (NumberFormatException e) {
+                    tilCustomAmount.setError("Invalid amount.");
+                    selectedLoadAmount = 0; // Reset amount if invalid
+                }
+            } else {
+                tilCustomAmount.setError(null); // Clear error if empty, but button remains disabled
+                selectedLoadAmount = 0; // Reset amount if empty
+            }
+        } else {
+            // If custom amount is not visible, a fixed amount must be selected
+            isValid = selectedLoadAmount > 0; // selectedLoadAmount is set in handleAmountSelection
         }
+
+        btnConfirmLoad.setEnabled(isValid);
     }
 
 
     private void setupPaymentMethodSelection() {
         RadioGroup rgPaymentMethods = findViewById(R.id.rg_payment_methods);
+        rbOthersPayment = findViewById(R.id.rb_others); // Ensure this is initialized
+        layoutOtherBanks = findViewById(R.id.layout_other_banks); // Ensure this is initialized
 
         // Listener for the main payment options (Credit/Debit, Gcash, Maya, Others)
         rgPaymentMethods.setOnCheckedChangeListener((group, checkedId) -> {
@@ -165,9 +185,11 @@ public class LoadCard extends AppCompatActivity {
                 layoutOtherBanks.setVisibility(View.VISIBLE);
             } else {
                 layoutOtherBanks.setVisibility(View.GONE);
-                // Optional: Clear selection within the nested RadioGroup if needed
-                // RadioGroup rgOtherBanks = findViewById(R.id.rg_other_banks); // Assuming you add an ID to the nested group
-                // rgOtherBanks.clearCheck();
+                // Clear selection within the nested RadioGroup when switching away from Others
+                RadioGroup rgOtherBanks = findViewById(R.id.rg_other_banks);
+                if (rgOtherBanks != null) {
+                    rgOtherBanks.clearCheck();
+                }
             }
         });
 
@@ -177,18 +199,20 @@ public class LoadCard extends AppCompatActivity {
         RadioButton rbBpi = findViewById(R.id.rb_bpi);
         RadioButton rbMetrobank = findViewById(R.id.rb_metrobank);
 
-        // When a specific bank is clicked, ensure "Others" stays checked
+        // When a specific bank is clicked, ensure "Others" stays checked in the main group
         View.OnClickListener bankClickListener = v -> {
             if (!rbOthersPayment.isChecked()) {
-                rbOthersPayment.setChecked(true); // This will trigger the listener above to show the banks
+                // This check might be redundant if the nested group is only visible when rb_others is checked,
+                // but it's safe to keep.
+                rbOthersPayment.setChecked(true);
             }
-            // You might want to store which specific bank was selected here
-            // e.g., String selectedBank = ((RadioButton) v).getText().toString();
+            // The RadioGroup rg_other_banks handles the selection visually.
+            // We just need to make sure the main "Others" radio button stays conceptually selected.
         };
 
-        rbBdo.setOnClickListener(bankClickListener);
-        rbBpi.setOnClickListener(bankClickListener);
-        rbMetrobank.setOnClickListener(bankClickListener);
+        if (rbBdo != null) rbBdo.setOnClickListener(bankClickListener);
+        if (rbBpi != null) rbBpi.setOnClickListener(bankClickListener);
+        if (rbMetrobank != null) rbMetrobank.setOnClickListener(bankClickListener);
 
         // Ensure the 'Others' section is hidden initially if 'Others' isn't checked by default
         if (!rbOthersPayment.isChecked()) {
@@ -206,16 +230,18 @@ public class LoadCard extends AppCompatActivity {
         }
 
         RadioButton selectedRadioButton = findViewById(selectedId);
+        if (selectedRadioButton == null) return "Not Selected"; // Safety check
 
         if (selectedId == R.id.rb_others) {
-            // Check the nested RadioGroup for BDO, BPI, Metrobank
-            RadioGroup rgOtherBanks = layoutOtherBanks.findViewById(R.id.rg_other_banks); // **You need to add this ID in your XML**
+            RadioGroup rgOtherBanks = findViewById(R.id.rg_other_banks);
+            if (rgOtherBanks == null) return "Error: Other Banks group not found"; // Should not happen
+
             int selectedBankId = rgOtherBanks.getCheckedRadioButtonId();
             if (selectedBankId != -1) {
                 RadioButton selectedBankButton = findViewById(selectedBankId);
-                return selectedBankButton.getText().toString(); // Return "BDO", "BPI", or "Metrobank"
+                return selectedBankButton != null ? selectedBankButton.getText().toString() : "Others (Error)";
             } else {
-                return "Others (No specific bank selected)"; // Or just "Others"
+                return "Others (No specific bank selected)";
             }
         } else {
             // For Credit/Debit, Gcash, Maya
@@ -225,29 +251,32 @@ public class LoadCard extends AppCompatActivity {
 
 
     private void confirmLoad() {
-        // --- FIX 4: Get the actual selected payment method ---
         String paymentMethod = getSelectedPaymentMethod();
+        int amountToLoad = 0;
 
-        // Amount validation
-        int currentAmount = 0;
+        // Determine the amount based on selection type
         if (tilCustomAmount.getVisibility() == View.VISIBLE) {
-            try {
-                currentAmount = Integer.parseInt(etCustomAmount.getText().toString());
-            } catch (NumberFormatException e) {
-                // Handle empty or invalid input in the custom field
-                Toast.makeText(this, "Please enter a valid amount (Min ₱20).", Toast.LENGTH_SHORT).show();
+            String amountStr = etCustomAmount.getText().toString();
+            if (amountStr.isEmpty()) {
+                Toast.makeText(this, "Please enter an amount.", Toast.LENGTH_SHORT).show();
                 return;
             }
-            if (currentAmount < 20) {
-                Toast.makeText(this, "Minimum load amount is ₱20.", Toast.LENGTH_SHORT).show();
+            try {
+                amountToLoad = Integer.parseInt(amountStr);
+                if (amountToLoad < 20) {
+                    Toast.makeText(this, "Minimum load amount is ₱20.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Invalid amount entered.", Toast.LENGTH_SHORT).show();
                 return;
             }
         } else {
-            // Use the fixed amount if custom field is hidden
-            currentAmount = selectedLoadAmount;
-            if (currentAmount == 0) { // Should not happen if logic is correct, but safe check
-                Toast.makeText(this, "Please select or enter a load amount.", Toast.LENGTH_SHORT).show();
-                return;
+            // A fixed amount button must be selected
+            amountToLoad = selectedLoadAmount;
+            if (amountToLoad <= 0) { // Should be > 0 if a fixed button is selected
+                Toast.makeText(this, "Please select a load amount.", Toast.LENGTH_SHORT).show();
+                return; // Exit if no valid amount selected
             }
         }
 
@@ -261,15 +290,37 @@ public class LoadCard extends AppCompatActivity {
             Toast.makeText(this, "Please select a specific bank under 'Others'.", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (paymentMethod.contains("Error")) {
+            Toast.makeText(this, "There was an error getting the payment method.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
 
         // If all validations pass
         Toast.makeText(this,
-                String.format("Confirmed load of ₱%d via %s.", currentAmount, paymentMethod),
+                String.format("Confirmed load of ₱%d via %s.", amountToLoad, paymentMethod),
                 Toast.LENGTH_LONG).show();
+
+        // --- Add navigation back to HomePage after confirmation ---
+        // finish(); // Option 1: Simply close LoadCard activity
+        // Or
+        Intent intent = new Intent(LoadCard.this, HomePage.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); // Clears back stack up to HomePage
+        startActivity(intent);
+        finish(); // Close LoadCard after starting HomePage
+        // --------------------------------------------------------
 
         // Here you would typically proceed with the actual payment processing
         // (e.g., call an API, integrate with a payment gateway)
     }
+
+    // --- Added onBackPressed ---
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        // Default behavior is to finish the activity, which is usually correct here.
+        // You could add custom behavior if needed.
+    }
+    // -------------------------
 
 }
