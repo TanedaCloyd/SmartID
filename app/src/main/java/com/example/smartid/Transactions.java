@@ -1,52 +1,40 @@
 package com.example.smartid;
 
-import android.content.Intent;
+import android.content.Intent; // ** Import Intent **
 import android.os.Bundle;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
-import androidx.appcompat.widget.SearchView; // Correct import
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat; // For getting colors correctly
-import android.content.res.ColorStateList; // For setting tint list
 
-// Recommendation: Import RecyclerView related classes when ready
-// import androidx.recyclerview.widget.LinearLayoutManager;
-// import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors; // For cleaner filtering/searching if using Java 8+
+import java.util.stream.Collectors; // Keep if using stream filters
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class Transactions extends AppCompatActivity {
+
+    // --- Use SessionManager ---
+    private SessionManager sessionManager;
+    // --- Removed hardcodedRfid ---
 
     private ImageButton btnBack;
     private SearchView searchTransactions;
     private Button btnAll, btnTrainRides, btnLoad;
 
-    // Recommendation: Add RecyclerView and its Adapter
-    // private RecyclerView transactionRecyclerView;
-    // private TransactionAdapter transactionAdapter;
+    private RecyclerView transactionRecyclerView;
+    private TransactionAdapter transactionAdapter;
+    private ApiService apiService;
 
-    // Transaction data structure (remains the same)
-    public static class Transaction {
-        public String type; // e.g., "train_ride", "load"
-        public String description;
-        public String dateTime;
-        public double amount;
-        public boolean isDebit; // true if amount is deducted, false if added
-
-        public Transaction(String type, String description, String dateTime, double amount, boolean isDebit) {
-            this.type = type;
-            this.description = description;
-            this.dateTime = dateTime;
-            this.amount = amount;
-            this.isDebit = isDebit;
-        }
-    }
-
-    private List<Transaction> allTransactions; // Store all transactions here
+    private List<Tap> allTransactions; // Store all transactions here
     private String currentFilter = "all";
     private String currentSearchQuery = "";
 
@@ -55,17 +43,22 @@ public class Transactions extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_transactions);
 
+        // --- Initialize SessionManager ---
+        sessionManager = new SessionManager(getApplicationContext());
+        // --- End Init ---
+
+        // Setup the API service
+        apiService = ApiClient.getClient().create(ApiService.class);
+
         initializeViews();
-        initializeTransactions(); // Load initial data
-        // Recommendation: Setup RecyclerView here
-        // setupRecyclerView();
+        setupRecyclerView(); // Setup the (empty) adapter
         setupClickListeners();
         setupSearchView();
-        // --- setupBottomNavigation() call removed ---
 
-        // Apply initial filter and button style
         updateFilterButtonStyles(currentFilter);
-        filterAndDisplayTransactions(); // Display initial list
+
+        // Fetch real data from the server
+        fetchTransactions();
     }
 
     private void initializeViews() {
@@ -74,35 +67,70 @@ public class Transactions extends AppCompatActivity {
         btnAll = findViewById(R.id.btn_all);
         btnTrainRides = findViewById(R.id.btn_train_rides);
         btnLoad = findViewById(R.id.btn_load);
-        // Recommendation: Initialize RecyclerView
-        // transactionRecyclerView = findViewById(R.id.transaction_recycler_view);
+        transactionRecyclerView = findViewById(R.id.transaction_recycler_view);
     }
 
-    // Recommendation: Add method to setup RecyclerView
-    /*
     private void setupRecyclerView() {
-        transactionAdapter = new TransactionAdapter(new ArrayList<>()); // Start with empty list
+        allTransactions = new ArrayList<>(); // Initialize with empty list
+        transactionAdapter = new TransactionAdapter(this, allTransactions);
         transactionRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         transactionRecyclerView.setAdapter(transactionAdapter);
     }
-    */
 
+    // --- MODIFIED: Fetch data using SessionManager ---
+    private void fetchTransactions() {
+        // 1. Get the real RFID from the session
+        String rfid = sessionManager.getUserRfid();
 
-    private void initializeTransactions() {
-        // In a real app, load this from a database or API
-        allTransactions = new ArrayList<>();
+        // 2. Check if the user is logged in
+        if (rfid == null) {
+            Toast.makeText(this, "Error: Not logged in. Please log in again.", Toast.LENGTH_LONG).show();
+            // Optional: Redirect to login
+            Intent intent = new Intent(Transactions.this, Login.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish(); // Close this activity
+            return;
+        }
 
-        // Sample transaction data
-        allTransactions.add(new Transaction("train_ride", "LRT-1 Ride (Monumento to Balintawak)", "Today, 10:00 AM", 20.00, true));
-        allTransactions.add(new Transaction("load", "Loaded Amount via GCash", "Yesterday, 2:30 PM", 500.00, false));
-        allTransactions.add(new Transaction("train_ride", "LRT-1 Ride (Balintawak to Monumento)", "3 days ago, 9:45 AM", 20.00, true));
-        allTransactions.add(new Transaction("load", "Loaded Amount via Maya", "4 days ago, 5:00 PM", 100.00, false));
-        // Add more sample data if needed
+        // 3. Use the real rfid in the API call
+        apiService.getStudentProfile(rfid).enqueue(new Callback<StudentProfile>() {
+            @Override
+            public void onResponse(Call<StudentProfile> call, Response<StudentProfile> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().taps != null) {
+                    // Save the fetched transactions
+                    allTransactions = response.body().taps;
+                    // Filter and display them
+                    filterAndDisplayTransactions();
+                } else {
+                    // Handle API errors (e.g., user not found, server issue)
+                    String errorMsg = "Failed to fetch transactions.";
+                    if (response.errorBody() != null) {
+                        try { errorMsg += " " + response.errorBody().string(); }
+                        catch (Exception e) { Log.e("Transactions", "Error parsing error body", e); }
+                    } else { errorMsg += " Code: " + response.code(); }
+                    Toast.makeText(Transactions.this, errorMsg, Toast.LENGTH_LONG).show();
+                    // Display empty list on error
+                    allTransactions = new ArrayList<>();
+                    filterAndDisplayTransactions();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<StudentProfile> call, Throwable t) {
+                // Handle network failures
+                Log.e("Transactions", "API call failed: ", t);
+                Toast.makeText(Transactions.this, "Network Error: Could not fetch transactions. " + t.getMessage(), Toast.LENGTH_LONG).show();
+                // Display empty list on error
+                allTransactions = new ArrayList<>();
+                filterAndDisplayTransactions();
+            }
+        });
     }
+    // --- END MODIFICATION ---
 
     private void setupClickListeners() {
-        // Back button - return to previous screen
-        btnBack.setOnClickListener(v -> finish()); // finish() is correct here
+        btnBack.setOnClickListener(v -> finish());
 
         // Filter buttons
         btnAll.setOnClickListener(v -> {
@@ -112,13 +140,13 @@ public class Transactions extends AppCompatActivity {
         });
 
         btnTrainRides.setOnClickListener(v -> {
-            currentFilter = "train_ride";
+            currentFilter = "train_ride"; // Filters entry/exit/admin_correction
             updateFilterButtonStyles(currentFilter);
             filterAndDisplayTransactions();
         });
 
         btnLoad.setOnClickListener(v -> {
-            currentFilter = "load";
+            currentFilter = "load"; // Filters top_up
             updateFilterButtonStyles(currentFilter);
             filterAndDisplayTransactions();
         });
@@ -131,18 +159,18 @@ public class Transactions extends AppCompatActivity {
                 currentSearchQuery = query.trim();
                 filterAndDisplayTransactions();
                 searchTransactions.clearFocus(); // Hide keyboard
-                return true; // Indicate query handled
+                return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
                 currentSearchQuery = newText.trim();
-                filterAndDisplayTransactions(); // Filter results as user types
-                return true; // Indicate change handled
+                filterAndDisplayTransactions(); // Filter as user types
+                return true;
             }
         });
 
-        // Optional: Handle clearing the search query
+        // Optional: Handle clearing the search
         searchTransactions.setOnCloseListener(() -> {
             currentSearchQuery = "";
             filterAndDisplayTransactions();
@@ -150,107 +178,77 @@ public class Transactions extends AppCompatActivity {
         });
     }
 
-    // Combined filtering and searching logic
+    // Filter logic using Java Streams (requires API level 24+)
     private void filterAndDisplayTransactions() {
-        List<Transaction> filteredList;
-
-        if ("all".equals(currentFilter)) {
-            filteredList = new ArrayList<>(allTransactions);
-        } else {
-            // Using Java 8 streams
-            filteredList = allTransactions.stream()
-                    .filter(t -> currentFilter.equals(t.type))
-                    .collect(Collectors.toList());
+        if (allTransactions == null) {
+            allTransactions = new ArrayList<>(); // Ensure list is not null
         }
 
+        List<Tap> filteredList = new ArrayList<>(allTransactions); // Start with all
+
+        // 1. Filter by button type
+        if ("train_ride".equals(currentFilter)) {
+            filteredList = allTransactions.stream()
+                    .filter(t -> t.tapType != null && (t.tapType.equals("entry") || t.tapType.equals("exit") || t.tapType.equals("admin_correction")))
+                    .collect(Collectors.toList());
+        } else if ("load".equals(currentFilter)) {
+            filteredList = allTransactions.stream()
+                    .filter(t -> t.tapType != null && t.tapType.equals("top_up"))
+                    .collect(Collectors.toList());
+        }
+        // "all" case uses the initial full list
+
+        // 2. Filter by search query (case-insensitive)
         if (!currentSearchQuery.isEmpty()) {
             String lowerCaseQuery = currentSearchQuery.toLowerCase();
-            // Using Java 8 streams
             filteredList = filteredList.stream()
-                    .filter(t -> t.description.toLowerCase().contains(lowerCaseQuery) ||
-                            t.dateTime.toLowerCase().contains(lowerCaseQuery))
+                    .filter(t -> t.getDescription() != null && t.getDescription().toLowerCase().contains(lowerCaseQuery))
                     .collect(Collectors.toList());
         }
 
+        // 3. Update the RecyclerView adapter
         updateTransactionDisplay(filteredList);
 
+        // Show message if search yields no results
         if (filteredList.isEmpty() && !currentSearchQuery.isEmpty()) {
             Toast.makeText(this, "No transactions found matching '" + currentSearchQuery + "'", Toast.LENGTH_SHORT).show();
+        } else if (allTransactions.isEmpty() && currentSearchQuery.isEmpty()) {
+            // Optional: Show a message if there are no transactions at all
+            // Toast.makeText(this, "No transactions found.", Toast.LENGTH_SHORT).show();
         }
     }
 
+    // --- UI Helper methods ---
     private void updateFilterButtonStyles(String activeFilter) {
         resetButtonStyle(btnAll);
         resetButtonStyle(btnTrainRides);
         resetButtonStyle(btnLoad);
-
         switch (activeFilter) {
-            case "all":
-                setActiveButtonStyle(btnAll);
-                break;
-            case "train_ride":
-                setActiveButtonStyle(btnTrainRides);
-                break;
-            case "load":
-                setActiveButtonStyle(btnLoad);
-                break;
+            case "all": setActiveButtonStyle(btnAll); break;
+            case "train_ride": setActiveButtonStyle(btnTrainRides); break;
+            case "load": setActiveButtonStyle(btnLoad); break;
         }
     }
+    private void resetButtonStyle(Button button) { if (button != null) button.setAlpha(0.7f); }
+    private void setActiveButtonStyle(Button button) { if (button != null) button.setAlpha(1.0f); }
+    // --- End UI Helpers ---
 
-    private void resetButtonStyle(Button button) {
-        if (button == null) return;
-        button.setAlpha(0.7f);
-    }
-
-    private void setActiveButtonStyle(Button button) {
-        if (button == null) return;
-        button.setAlpha(1.0f);
-    }
-
-    private void updateTransactionDisplay(List<Transaction> transactions) {
-        // TODO: Replace placeholder with RecyclerView update logic
-        /*
+    private void updateTransactionDisplay(List<Tap> transactions) {
         if (transactionAdapter != null) {
-            transactionAdapter.updateTransactions(transactions);
+            transactionAdapter.updateTransactions(transactions); // Tell adapter data changed
         } else {
-            System.out.println("Adapter not initialized");
+            Log.e("Transactions", "Adapter not initialized when trying to update display");
         }
-        */
-        System.out.println("Displaying " + transactions.size() + " transactions");
-    }
-
-    public void addTransaction(String type, String description, String dateTime, double amount, boolean isDebit) {
-        Transaction newTransaction = new Transaction(type, description, dateTime, amount, isDebit);
-        allTransactions.add(0, newTransaction);
-        filterAndDisplayTransactions();
-        Toast.makeText(this, "New transaction added", Toast.LENGTH_SHORT).show();
-    }
-
-    public double getTotalBalance() {
-        double balance = 0;
-        for (Transaction transaction : allTransactions) {
-            balance += (transaction.isDebit ? -transaction.amount : transaction.amount);
-        }
-        return balance;
-    }
-
-    public int getTransactionCount(String type) {
-        int count = 0;
-        for (Transaction transaction : allTransactions) {
-            if ("all".equals(type) || transaction.type.equals(type)) {
-                count++;
-            }
-        }
-        return count;
+        Log.d("Transactions", "Displaying " + transactions.size() + " filtered transactions");
     }
 
     @Override
     public void onBackPressed() {
+        // If search view is open, close it first
         if (!searchTransactions.isIconified()) {
-            searchTransactions.setIconified(true);
-            searchTransactions.setQuery("", false);
+            searchTransactions.setIconified(true); // Clears text and collapses view
         } else {
-            super.onBackPressed();
+            super.onBackPressed(); // Otherwise, perform default back action
         }
     }
 }

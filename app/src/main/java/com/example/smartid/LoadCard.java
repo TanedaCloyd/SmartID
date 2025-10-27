@@ -2,65 +2,80 @@ package com.example.smartid;
 
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton; // Import ImageButton for back button
+import android.widget.ImageButton;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.LinearLayout;
+import android.widget.TextView; // Make sure this is imported
 import android.widget.Toast;
-import com.google.android.material.textfield.TextInputLayout;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class LoadCard extends AppCompatActivity {
+
+    // SessionManager to get the logged-in user's RFID
+    private SessionManager sessionManager;
 
     private TextInputLayout tilCustomAmount;
     private TextInputEditText etCustomAmount;
     private Button btnOtherAmount;
-
-    // --- "Others" variables REMOVED ---
-    // private RadioButton rbOthersPayment;
-    // private LinearLayout layoutOtherBanks;
-
     private Button btnConfirmLoad;
     private ImageButton btnBack;
+    private TextView tvCurrentBalance;
     private Map<Integer, Integer> fixedAmountButtons = new HashMap<>();
+
+    // Networking
+    private ApiService apiService;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_load);
 
+        // Initialize SessionManager
+        sessionManager = new SessionManager(getApplicationContext());
+
+        // Setup the API service
+        apiService = ApiClient.getClient().create(ApiService.class);
+
         initializeViews();
         setupBackButton();
         setupFixedAmountButtons();
         setupCustomAmountInput();
-        // setupPaymentMethodSelection(); // This method is no longer needed
 
-        // Ensure confirm button is disabled correctly on start
         updateConfirmButtonState();
 
+        // Set the listener for the confirm button
         btnConfirmLoad.setOnClickListener(v -> confirmLoad());
+
+        // TODO: Optionally, fetch and display the current balance when the screen loads
+        // fetchCurrentBalance();
     }
 
     private void initializeViews() {
         tilCustomAmount = findViewById(R.id.til_custom_amount);
         etCustomAmount = findViewById(R.id.et_custom_amount);
         btnOtherAmount = findViewById(R.id.btn_amount_other);
-
-        // --- "Others" findViewById calls REMOVED ---
-        // rbOthersPayment = findViewById(R.id.rb_others);
-        // layoutOtherBanks = findViewById(R.id.layout_other_banks);
-
         btnConfirmLoad = findViewById(R.id.btn_confirm_load);
         btnBack = findViewById(R.id.btn_back);
+        tvCurrentBalance = findViewById(R.id.tv_current_balance);
+        // Set an initial placeholder or loading text
+        tvCurrentBalance.setText("₱----.--");
     }
 
     private void setupBackButton() {
@@ -68,14 +83,12 @@ public class LoadCard extends AppCompatActivity {
     }
 
     private void setupFixedAmountButtons() {
-        // Map button IDs to their amounts
         fixedAmountButtons.put(R.id.btn_amount_50, 50);
         fixedAmountButtons.put(R.id.btn_amount_100, 100);
         fixedAmountButtons.put(R.id.btn_amount_200, 200);
         fixedAmountButtons.put(R.id.btn_amount_500, 500);
         fixedAmountButtons.put(R.id.btn_amount_1000, 1000);
 
-        // Set click listeners
         for (Map.Entry<Integer, Integer> entry : fixedAmountButtons.entrySet()) {
             Button btn = findViewById(entry.getKey());
             if (btn != null) {
@@ -83,17 +96,12 @@ public class LoadCard extends AppCompatActivity {
             }
         }
 
-        // Make "Other" button clear the text field
         btnOtherAmount.setOnClickListener(v -> {
-            etCustomAmount.setText(""); // Clear the text field
-            etCustomAmount.requestFocus(); // Focus the input field
-
-            // Visually deselect other buttons
+            etCustomAmount.setText("");
+            etCustomAmount.requestFocus();
             for (int id : fixedAmountButtons.keySet()) {
                 View fixedBtn = findViewById(id);
-                if (fixedBtn != null) {
-                    fixedBtn.setSelected(false);
-                }
+                if (fixedBtn != null) fixedBtn.setSelected(false);
             }
             btnOtherAmount.setSelected(true);
         });
@@ -101,14 +109,10 @@ public class LoadCard extends AppCompatActivity {
 
     private void handleAmountSelection(View selectedButton, int amount) {
         etCustomAmount.setText(String.valueOf(amount));
-        tilCustomAmount.setError(null); // Clear any errors
-
-        // Update visual state of all fixed amount buttons
+        tilCustomAmount.setError(null);
         for (int id : fixedAmountButtons.keySet()) {
             View view = findViewById(id);
-            if (view != null) {
-                view.setSelected(view.getId() == selectedButton.getId());
-            }
+            if (view != null) view.setSelected(view.getId() == selectedButton.getId());
         }
         btnOtherAmount.setSelected(false);
     }
@@ -117,13 +121,10 @@ public class LoadCard extends AppCompatActivity {
         etCustomAmount.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (etCustomAmount.hasFocus()) {
-                    clearFixedButtonSelection();
-                }
-                updateConfirmButtonState(); // Update based on current input
+                if (etCustomAmount.hasFocus()) clearFixedButtonSelection();
+                updateConfirmButtonState();
             }
             @Override
             public void afterTextChanged(Editable s) {}
@@ -133,9 +134,7 @@ public class LoadCard extends AppCompatActivity {
     private void clearFixedButtonSelection() {
         for (int id : fixedAmountButtons.keySet()) {
             View fixedBtn = findViewById(id);
-            if (fixedBtn != null) {
-                fixedBtn.setSelected(false);
-            }
+            if (fixedBtn != null) fixedBtn.setSelected(false);
         }
         btnOtherAmount.setSelected(true);
     }
@@ -143,13 +142,13 @@ public class LoadCard extends AppCompatActivity {
     private void updateConfirmButtonState() {
         String input = etCustomAmount.getText().toString();
         boolean isValid = false;
-
         if (!input.isEmpty()) {
             try {
-                int amount = Integer.parseInt(input);
+                // Use double here to match confirmLoad logic
+                double amount = Double.parseDouble(input);
                 if (amount >= 20) {
                     isValid = true;
-                    tilCustomAmount.setError(null); // Clear error
+                    tilCustomAmount.setError(null);
                 } else {
                     tilCustomAmount.setError("Minimum load amount is ₱20.");
                 }
@@ -157,40 +156,25 @@ public class LoadCard extends AppCompatActivity {
                 tilCustomAmount.setError("Invalid amount.");
             }
         } else {
-            tilCustomAmount.setError(null); // No error if empty, just disabled
+            tilCustomAmount.setError(null);
         }
         btnConfirmLoad.setEnabled(isValid);
     }
 
-    // --- setupPaymentMethodSelection method REMOVED as it's no longer needed ---
-    /*
-    private void setupPaymentMethodSelection() {
-        // All logic for "Others" was here
-    }
-    */
-
-    // --- SIMPLIFIED getSelectedPaymentMethod ---
     private String getSelectedPaymentMethod() {
         RadioGroup rgPaymentMethods = findViewById(R.id.rg_payment_methods);
         int selectedId = rgPaymentMethods.getCheckedRadioButtonId();
-
-        if (selectedId == -1) {
-            return "Not Selected";
-        }
-
+        if (selectedId == -1) return "Not Selected";
         RadioButton selectedRadioButton = findViewById(selectedId);
-        if (selectedRadioButton == null) {
-            return "Not Selected";
-        }
-
-        // Return the text of the selected button (e.g., "Credit/Debit Card", "Gcash", "Maya")
         return selectedRadioButton.getText().toString();
     }
 
-
+    /**
+     * This function now contains the complete network logic.
+     */
     private void confirmLoad() {
         String paymentMethod = getSelectedPaymentMethod();
-        int amountToLoad = 0;
+        double amountToLoad = 0;
 
         String amountStr = etCustomAmount.getText().toString();
         if (amountStr.isEmpty()) {
@@ -198,7 +182,7 @@ public class LoadCard extends AppCompatActivity {
             return;
         }
         try {
-            amountToLoad = Integer.parseInt(amountStr);
+            amountToLoad = Double.parseDouble(amountStr);
             if (amountToLoad < 20) {
                 Toast.makeText(this, "Minimum load amount is ₱20.", Toast.LENGTH_SHORT).show();
                 return;
@@ -208,27 +192,103 @@ public class LoadCard extends AppCompatActivity {
             return;
         }
 
-        // Payment method validation
         if (paymentMethod.equals("Not Selected")) {
             Toast.makeText(this, "Please select a payment method.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // --- "Others" validation logic REMOVED ---
+        // Disable button, show loading
+        btnConfirmLoad.setEnabled(false);
+        btnConfirmLoad.setText("Processing...");
 
-        // If all validations pass
-        Toast.makeText(this,
-                String.format("Confirmed load of ₱%d via %s.", amountToLoad, paymentMethod),
-                Toast.LENGTH_LONG).show();
+        // 1. Create the request body
+        AddBalanceRequest requestBody = new AddBalanceRequest(amountToLoad);
 
-        Intent intent = new Intent(LoadCard.this, HomePage.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        startActivity(intent);
-        finish();
+        // 2. Get the logged-in user's RFID
+        String rfid = sessionManager.getUserRfid();
+        if (rfid == null) {
+            Toast.makeText(this, "Error: Not logged in. Please log in again.", Toast.LENGTH_LONG).show();
+            btnConfirmLoad.setEnabled(true); // Re-enable button
+            btnConfirmLoad.setText("Confirm Load");
+            // Optional: Redirect to login
+            Intent intent = new Intent(LoadCard.this, Login.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            return;
+        }
+
+        // 3. Call the API using enqueue for asynchronous network call
+        apiService.addBalance(rfid, requestBody).enqueue(new Callback<AddBalanceResponse>() {
+            @Override
+            public void onResponse(Call<AddBalanceResponse> call, Response<AddBalanceResponse> response) {
+                // Network call finished, re-enable button
+                btnConfirmLoad.setEnabled(true);
+                btnConfirmLoad.setText("Confirm Load");
+
+                if (response.isSuccessful() && response.body() != null) {
+                    // --- Handle successful API response ---
+                    String newBalance = response.body().newBalance;
+                    tvCurrentBalance.setText("₱" + newBalance); // Update the balance TextView
+
+                    Toast.makeText(LoadCard.this, "Load successful! New balance is ₱" + newBalance, Toast.LENGTH_LONG).show();
+
+                    // Go back to the previous screen (e.g., HomePage)
+                    finish();
+                } else {
+                    // --- Handle API error response (e.g., user not found, server issue) ---
+                    String errorMsg = "Load failed. Server responded with error.";
+                    if (response.errorBody() != null) {
+                        try {
+                            // Try to parse error message from server if available
+                            // This depends on how your backend sends errors
+                            errorMsg += " " + response.errorBody().string();
+                        } catch (Exception e) { Log.e("LoadCard", "Error parsing error body", e); }
+                    } else {
+                        errorMsg += " Code: " + response.code();
+                    }
+                    Toast.makeText(LoadCard.this, errorMsg, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<AddBalanceResponse> call, Throwable t) {
+                // --- Handle network failure (e.g., no internet connection) ---
+                btnConfirmLoad.setEnabled(true);
+                btnConfirmLoad.setText("Confirm Load");
+
+                Log.e("LoadCard", "Network failure: ", t);
+                Toast.makeText(LoadCard.this, "Load failed: Could not connect to server. " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        }); // <-- The enqueue call was missing its content, now it's complete
     }
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+        super.onBackPressed(); // Default behavior finishes the activity
+    }
+
+    // Optional: Method to fetch balance when screen loads
+    private void fetchCurrentBalance() {
+        String rfid = sessionManager.getUserRfid();
+        if (rfid != null) {
+            apiService.getStudentProfile(rfid).enqueue(new Callback<StudentProfile>() {
+                @Override
+                public void onResponse(Call<StudentProfile> call, Response<StudentProfile> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        tvCurrentBalance.setText("₱" + String.format("%.2f", response.body().balance));
+                    } else {
+                        tvCurrentBalance.setText("₱?.??"); // Indicate error fetching
+                    }
+                }
+                @Override
+                public void onFailure(Call<StudentProfile> call, Throwable t) {
+                    tvCurrentBalance.setText("₱?.??"); // Indicate error fetching
+                    Log.e("LoadCard", "Failed to fetch initial balance", t);
+                }
+            });
+        } else {
+            // Handle not being logged in if needed
+            tvCurrentBalance.setText("₱----.--");
+        }
     }
 }
