@@ -5,38 +5,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/blue"
-    tools:context=".SignUp"> <androidx.constraintlayout.widget.ConstraintLayout
-    android:id="@+id/top_logo_container"
-    android:layout_width="match_parent"
-    android:layout_height="0dp"
-    android:background="@color/blue"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintHeight_percent="0.25" app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent">
+    tools:context=".SignUp">
 
-    <ImageView
-        android:id="@+id/smartid_logo_image"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/top_logo_container"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_margin="16dp"
-        android:src="@drawable/smartid_logo"
-        android:adjustViewBounds="true"
-        android:scaleType="fitCenter"
-        app:layout_constraintStart_toStartOf="parent"
+        android:background="@color/blue"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        android:contentDescription="SmartID Logo" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        app:layout_constraintHeight_percent="0.25"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/smartid_logo_image"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_margin="16dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="SmartID Logo"
+            android:scaleType="fitCenter"
+            android:src="@drawable/smartid_logo"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/form_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/blue" android:padding="32dp"
+        android:background="@color/blue"
+        android:padding="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_percent="0.75" app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintHeight_percent="0.75"
+        app:layout_constraintStart_toStartOf="parent">
 
         <TextView
             android:id="@+id/tvSignUpHeader"
@@ -55,10 +60,10 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
             android:fillViewport="true"
-            app:layout_constraintTop_toBottomOf="@id/tvSignUpHeader"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tv_sign_in"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/tv_sign_in">
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSignUpHeader">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -135,21 +140,6 @@
                         android:inputType="textPassword" />
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/til_confirm_password"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:hint="Confirm Password"
-                    app:endIconMode="password_toggle">
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/et_confirm_password"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:inputType="textPassword" />
-                </com.google.android.material.textfield.TextInputLayout>
-
                 <Button
                     android:id="@+id/btn_signup"
                     android:layout_width="match_parent"
@@ -169,8 +159,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:text="Already have an account? Sign in"
-            android:textColor="@android:color/black"
+            android:text="Sign in" android:textColor="@android:color/black"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
