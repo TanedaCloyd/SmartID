@@ -179,6 +179,7 @@ public class Transactions extends AppCompatActivity {
     }
 
     // Filter logic using Java Streams (requires API level 24+)
+    // Filter logic using Java Streams (requires API level 24+)
     private void filterAndDisplayTransactions() {
         if (allTransactions == null) {
             allTransactions = new ArrayList<>(); // Ensure list is not null
@@ -188,9 +189,15 @@ public class Transactions extends AppCompatActivity {
 
         // 1. Filter by button type
         if ("train_ride".equals(currentFilter)) {
+            // --- THIS IS THE FIX: Include "journey" type ---
             filteredList = allTransactions.stream()
-                    .filter(t -> t.tapType != null && (t.tapType.equals("entry") || t.tapType.equals("exit") || t.tapType.equals("admin_correction")))
+                    .filter(t -> t.tapType != null &&
+                            (t.tapType.equals("entry") ||
+                                    t.tapType.equals("exit") ||
+                                    t.tapType.equals("journey") || // Added journey
+                                    t.tapType.equals("admin_correction"))) // Keep admin_correction if relevant
                     .collect(Collectors.toList());
+            // --- END FIX ---
         } else if ("load".equals(currentFilter)) {
             filteredList = allTransactions.stream()
                     .filter(t -> t.tapType != null && t.tapType.equals("top_up"))

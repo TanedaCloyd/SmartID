@@ -2,55 +2,83 @@ package com.example.smartid;
 
 import android.content.Intent;
 import android.app.AlertDialog;
-import android.content.res.ColorStateList; // Import ColorStateList
+import android.content.res.ColorStateList;
 import android.os.Bundle;
-import android.os.Handler; // Import Handler
-import android.os.Looper; // Import Looper
+import android.os.Handler; // Keep for simulation
+import android.os.Looper; // Keep for simulation
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat; // Import ContextCompat
+import androidx.core.content.ContextCompat;
 import com.google.android.material.card.MaterialCardView;
+
+// Imports needed for simulation (even if backend isn't ready)
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+// Keep Retrofit imports if simulation uses dummy API calls
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class Rewards extends AppCompatActivity {
 
     private ImageButton btnBack;
-    private ImageView profileImage; // Consider making non-interactive or loading actual image
+    private ImageView profileImage;
     private TextView tvUserName, tvStudentId, tvPointsValue;
     private MaterialCardView rewardCard, pointsCard;
     private Button btnRedeemNow;
-    // --- Removed bottom navigation Buttons ---
-    // private Button cardDetailsButton, homeButton, profileButton;
 
-    // Reward card TextViews (added from XML update)
     private TextView tvRewardTitle, tvRewardDescription, tvRewardExpiry;
 
-    // User data (better to pass via Intent or load from storage)
-    private String userName = "Cloyd Harley V. Taneda";
-    private String studentId = "2025-12345";
-    private int loyaltyPoints = 300; // Load from storage
+    // --- Add SessionManager ---
+    private SessionManager sessionManager;
+    // --- Keep ApiService if needed for simulation ---
+    private ApiService apiService;
+    // ---
 
-    // Reward data (load from storage/API, this is just one example)
-    private String rewardTitle = "100% OFF";
-    private String rewardDescription = "Train Fare Discount";
-    private String rewardExpiry = "Valid until Sept. 16, 2025";
-    private boolean isRewardRedeemed = false; // Load from storage
+    // --- Keep Simulation Data Variables ---
+    private String userName_simulated = "Cloyd Harley V. Taneda"; // Original hardcoded name
+    private String studentId_simulated = "2025-12345";       // Original hardcoded ID
+    private int loyaltyPoints_simulated = 300;
+    private String rewardTitle_simulated = "100% OFF";
+    private String rewardDescription_simulated = "Train Fare Discount";
+    private String rewardExpiry_simulated = "Valid until Sept. 16, 2025";
+    private boolean isRewardRedeemed_simulated = false;
+    private Handler handler = new Handler(Looper.getMainLooper()); // For simulation delays
+    // --- End Simulation Data ---
 
-    private Handler handler = new Handler(Looper.getMainLooper()); // Handler for delays/simulations
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rewards);
 
+        // --- Initialize SessionManager ---
+        sessionManager = new SessionManager(getApplicationContext());
+        // --- Initialize ApiService (if simulation uses it) ---
+        apiService = ApiClient.getClient().create(ApiService.class);
+
+
+        // Check login status
+        if (!sessionManager.isLoggedIn()) {
+            Intent intent = new Intent(Rewards.this, Login.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
+
         initializeViews();
         setupClickListeners();
-        // --- setupBottomNavigation() call removed ---
-        loadUserData();
-        loadRewardsData();
+        loadUserData(); // *** This will now load REAL user data ***
+        loadRewardsData_Simulated(); // Call the simulation function
     }
 
     private void initializeViews() {
@@ -62,218 +90,137 @@ public class Rewards extends AppCompatActivity {
         rewardCard = findViewById(R.id.reward_card);
         pointsCard = findViewById(R.id.points_card);
         btnRedeemNow = findViewById(R.id.btn_redeem_now);
-
-        // Initialize reward card text views
         tvRewardTitle = findViewById(R.id.tv_reward_title);
         tvRewardDescription = findViewById(R.id.tv_reward_description);
         tvRewardExpiry = findViewById(R.id.tv_reward_expiry);
 
-        // --- Removed findViewById for bottom navigation Buttons ---
-        // cardDetailsButton = findViewById(R.id.CardDetails_Button);
-        // homeButton = findViewById(R.id.Home_Button);
-        // profileButton = findViewById(R.id.Profile_Button);
+        // Initial states
+        rewardCard.setVisibility(View.VISIBLE); // Keep visible for simulation
+        tvPointsValue.setText("..."); // Loading state
     }
 
     private void setupClickListeners() {
-        // Back button - return to previous screen
         btnBack.setOnClickListener(v -> finish());
-
-        // Redeem Now button
-        btnRedeemNow.setOnClickListener(v -> redeemReward());
-
-        // Reward card click - show reward details
-        rewardCard.setOnClickListener(v -> showRewardDetails());
-
-        // Points card click - show points history/info
-        pointsCard.setOnClickListener(v -> showPointsHistory());
-
-        // Profile image click - currently does nothing useful
-        /* profileImage.setOnClickListener(v ->
-                Toast.makeText(this, "Profile picture functionality coming soon", Toast.LENGTH_SHORT).show());
-        */
+        // Keep redeem logic pointing to simulation
+        btnRedeemNow.setOnClickListener(v -> confirmRedeemReward_Simulated());
+        // Keep placeholder listeners
+        rewardCard.setOnClickListener(v -> Toast.makeText(this, "Reward details (simulated)", Toast.LENGTH_SHORT).show());
+        pointsCard.setOnClickListener(v -> Toast.makeText(this, "Points history (simulated)", Toast.LENGTH_SHORT).show());
     }
 
-    // --- setupBottomNavigation() method removed ---
-    /*
-    private void setupBottomNavigation() {
-        // ... method content removed ...
-    }
-    */
-
-
+    // --- THIS FUNCTION IS NOW CORRECT ---
+    // Load REAL basic user info from session
     private void loadUserData() {
-        // TODO: In a real app, load this from SharedPreferences, database, or API
-        tvUserName.setText(userName);
-        tvStudentId.setText("Student ID: " + studentId);
-        // Load actual profile image
+        String savedUserName = sessionManager.getUserName();
+        // Using email as a placeholder for Student ID
+        String savedUserIdentifier = sessionManager.getUserEmail();
+
+        // Set the TextViews with real data
+        tvUserName.setText(savedUserName != null ? savedUserName : "User Name");
+        tvStudentId.setText("User: " + (savedUserIdentifier != null ? savedUserIdentifier : "N/A"));
+
+        // TODO: Load actual profile image
     }
+    // --- END CORRECTION ---
 
-    private void loadRewardsData() {
-        // TODO: Load actual points, reward details, and redeemed status from storage/API
-        loyaltyPoints = 300; // Example
-        isRewardRedeemed = false; // Example
 
-        // Display points
-        tvPointsValue.setText(String.valueOf(loyaltyPoints));
+    // --- SIMULATION: Load hardcoded/simulated rewards data ---
+    private void loadRewardsData_Simulated() {
+        // Display simulated points
+        tvPointsValue.setText(String.valueOf(loyaltyPoints_simulated));
 
-        // Display details for the current reward
-        tvRewardTitle.setText(rewardTitle);
-        tvRewardDescription.setText(rewardDescription);
-        tvRewardExpiry.setText(rewardExpiry);
+        // Display simulated reward details
+        tvRewardTitle.setText(rewardTitle_simulated);
+        tvRewardDescription.setText(rewardDescription_simulated);
+        tvRewardExpiry.setText(rewardExpiry_simulated);
 
-        // Update redeem button state based on loaded data
-        updateRedeemButtonState();
+        // Update redeem button state based on simulated data
+        updateRedeemButtonState_Simulated();
     }
+    // --- END SIMULATION ---
 
-    private void redeemReward() {
-        if (isRewardRedeemed) {
-            Toast.makeText(this, "This reward has already been redeemed.", Toast.LENGTH_SHORT).show();
+
+    // --- SIMULATION: Show confirmation before redeeming ---
+    private void confirmRedeemReward_Simulated() {
+        if (isRewardRedeemed_simulated) {
+            Toast.makeText(this, "This reward has already been redeemed (simulated).", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        // Optional: Add points check if needed
-        // int pointsCost = 1000; // Example cost for this reward
-        // if (loyaltyPoints < pointsCost) {
-        //     Toast.makeText(this, "Not enough points to redeem.", Toast.LENGTH_SHORT).show();
+        // Optional points check simulation
+        // int pointsCost_simulated = 1000;
+        // if (loyaltyPoints_simulated < pointsCost_simulated) {
+        //     Toast.makeText(this, "Not enough points (simulated).", Toast.LENGTH_SHORT).show();
         //     return;
         // }
 
-        // Show confirmation dialog before processing
         new AlertDialog.Builder(this)
                 .setTitle("Confirm Redemption")
-                .setMessage("Are you sure you want to redeem the '" + rewardTitle + "' reward?")
-                .setPositiveButton("Redeem", (dialog, which) -> processRewardRedemption())
+                .setMessage("Are you sure you want to redeem the '" + rewardTitle_simulated + "' reward?")
+                .setPositiveButton("Redeem", (dialog, which) -> processRewardRedemption_Simulated())
                 .setNegativeButton("Cancel", null)
                 .show();
     }
+    // --- END SIMULATION ---
 
-    private void processRewardRedemption() {
-        Toast.makeText(this, "Processing redemption...", Toast.LENGTH_SHORT).show();
+    // --- SIMULATION: Process redemption with delay ---
+    private void processRewardRedemption_Simulated() {
+        Toast.makeText(this, "Processing redemption (simulated)...", Toast.LENGTH_SHORT).show();
         btnRedeemNow.setEnabled(false);
         btnRedeemNow.setText("Processing...");
 
-        // TODO: Replace simulation with actual API call to redeem the reward
-        // This should handle points deduction if applicable and update server state.
-
-        // Simulate network request
+        // Simulate network delay
         handler.postDelayed(() -> {
-            boolean success = true; // Simulate success/failure
+            boolean success = true; // Simulate success
 
             if (success) {
-                // TODO: Update persistent storage (e.g., mark reward as redeemed, deduct points)
-                isRewardRedeemed = true; // Update local state
-                // loyaltyPoints -= pointsCost; // Deduct points if needed
-                // tvPointsValue.setText(String.valueOf(loyaltyPoints)); // Update displayed points
+                isRewardRedeemed_simulated = true;
+                // Simulate points deduction if needed
+                // loyaltyPoints_simulated -= pointsCost_simulated;
+                // tvPointsValue.setText(String.valueOf(loyaltyPoints_simulated));
 
-                updateRedeemButtonState(); // Update button UI
+                updateRedeemButtonState_Simulated(); // Update button UI
                 showRedemptionSuccess(); // Show success message
             } else {
                 showRedemptionFailure(); // Show failure message
-                // Re-enable button after failure
                 btnRedeemNow.setEnabled(true);
                 btnRedeemNow.setText("Redeem Now");
             }
-        }, 2000); // Simulate 2-second delay
+        }, 1500); // Simulate 1.5 second delay
     }
+    // --- END SIMULATION ---
 
-    private void updateRedeemButtonState() {
-        if (isRewardRedeemed) {
+    // --- SIMULATION: Update button appearance ---
+    private void updateRedeemButtonState_Simulated() {
+        if (isRewardRedeemed_simulated) {
             btnRedeemNow.setText("Redeemed");
             btnRedeemNow.setEnabled(false);
-            // Use ContextCompat for color resources
             btnRedeemNow.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, android.R.color.darker_gray)));
-            btnRedeemNow.setTextColor(ContextCompat.getColor(this, android.R.color.black)); // Adjust text color if needed
         } else {
             btnRedeemNow.setText("Redeem Now");
             btnRedeemNow.setEnabled(true);
-            // Use ContextCompat for color resources - Ensure R.color.light_green exists
             btnRedeemNow.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(this, R.color.light_green)));
-            btnRedeemNow.setTextColor(ContextCompat.getColor(this, R.color.black)); // Ensure text color is correct
         }
+        btnRedeemNow.setVisibility(View.VISIBLE); // Keep button visible
     }
+    // --- END SIMULATION ---
 
     private void showRedemptionSuccess() {
-        Toast.makeText(this, "Reward redeemed successfully!", Toast.LENGTH_LONG).show();
-        // Maybe navigate back or update UI further
+        Toast.makeText(this, "Reward redeemed successfully! (Simulated)", Toast.LENGTH_LONG).show();
     }
 
     private void showRedemptionFailure() {
-        Toast.makeText(this, "Redemption failed. Please try again.", Toast.LENGTH_LONG).show();
-    }
-
-
-    private void showRewardDetails() {
-        // Could show a more detailed dialog/bottom sheet instead of just a Toast
-        String message = String.format("Reward: %s\n%s\n%s",
-                rewardTitle, rewardDescription, rewardExpiry);
-        new AlertDialog.Builder(this)
-                .setTitle("Reward Details")
-                .setMessage(message)
-                .setPositiveButton("OK", null)
-                .show();
-        // Toast.makeText(this, message, Toast.LENGTH_LONG).show(); // Alternative
-    }
-
-    private void showPointsHistory() {
-        // Could show a more detailed dialog/Activity showing points history
-        String message = String.format("Current Points: %d\nValue: ₱%.2f\n(100 points = ₱10)",
-                loyaltyPoints, getPointsValueInPesos());
-        new AlertDialog.Builder(this)
-                .setTitle("Loyalty Points")
-                .setMessage(message)
-                .setPositiveButton("OK", null)
-                .show();
-        // Toast.makeText(this, message, Toast.LENGTH_LONG).show(); // Alternative
-    }
-
-    // --- Utility Methods ---
-
-    // Method to add points (called when user makes transactions - needs integration)
-    public void addPoints(int points) {
-        // TODO: Update persistent storage
-        this.loyaltyPoints += points;
-        if (tvPointsValue != null) { // Check if view is ready
-            tvPointsValue.setText(String.valueOf(loyaltyPoints));
-        }
-        // Maybe show a less intrusive notification or update UI subtly
-        // Toast.makeText(this, "Earned " + points + " loyalty points!", Toast.LENGTH_SHORT).show();
-    }
-
-    // Method to redeem points for rewards (logic might be in processRewardRedemption)
-    public boolean canRedeemPoints(int pointsCost) {
-        return loyaltyPoints >= pointsCost;
-    }
-
-    // Method to check if reward is available
-    public boolean isRewardAvailable() {
-        // TODO: Load actual status
-        return !isRewardRedeemed;
-    }
-
-    // Method to get current points value in pesos
-    public double getPointsValueInPesos() {
-        // Ensure calculation is correct based on your rules
-        return (loyaltyPoints / 100.0) * 10.0;
-    }
-
-    // Method to update user information (e.g., if profile changes elsewhere)
-    public void updateUserInfo(String name, String id) {
-        // TODO: Update persistent storage if needed
-        this.userName = name;
-        this.studentId = id;
-        loadUserData(); // Refresh display
+        Toast.makeText(this, "Redemption failed (Simulated).", Toast.LENGTH_LONG).show();
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        // Finishes the activity by default
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Remove callbacks to prevent memory leaks if simulation is running
+        // Remove simulation callbacks to prevent memory leaks
         handler.removeCallbacksAndMessages(null);
     }
 }
