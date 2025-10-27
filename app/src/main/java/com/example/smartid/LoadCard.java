@@ -20,6 +20,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.HashMap;
+import java.util.Locale; // ** Import Locale **
 import java.util.Map;
 
 import retrofit2.Call;
@@ -63,8 +64,9 @@ public class LoadCard extends AppCompatActivity {
         // Set the listener for the confirm button
         btnConfirmLoad.setOnClickListener(v -> confirmLoad());
 
-        // TODO: Optionally, fetch and display the current balance when the screen loads
-        // fetchCurrentBalance();
+        // --- FETCH BALANCE ON CREATE ---
+        fetchCurrentBalance(); // Fetch and display the balance when the screen starts
+        // --- END FETCH ---
     }
 
     private void initializeViews() {
@@ -75,7 +77,7 @@ public class LoadCard extends AppCompatActivity {
         btnBack = findViewById(R.id.btn_back);
         tvCurrentBalance = findViewById(R.id.tv_current_balance);
         // Set an initial placeholder or loading text
-        tvCurrentBalance.setText("₱----.--");
+        tvCurrentBalance.setText("Loading..."); // Changed from dashline
     }
 
     private void setupBackButton() {
@@ -170,7 +172,7 @@ public class LoadCard extends AppCompatActivity {
     }
 
     /**
-     * This function now contains the complete network logic.
+     * Handles confirming the load amount and making the API call.
      */
     private void confirmLoad() {
         String paymentMethod = getSelectedPaymentMethod();
@@ -227,10 +229,18 @@ public class LoadCard extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null) {
                     // --- Handle successful API response ---
-                    String newBalance = response.body().newBalance;
-                    tvCurrentBalance.setText("₱" + newBalance); // Update the balance TextView
+                    String newBalanceString = response.body().newBalance;
+                    // Try parsing the new balance to update the display accurately
+                    try {
+                        double newBalanceValue = Double.parseDouble(newBalanceString);
+                        tvCurrentBalance.setText("₱" + String.format(Locale.US, "%.2f", newBalanceValue));
+                    } catch(NumberFormatException e) {
+                        // Fallback if parsing fails
+                        tvCurrentBalance.setText("₱" + newBalanceString);
+                    }
 
-                    Toast.makeText(LoadCard.this, "Load successful! New balance is ₱" + newBalance, Toast.LENGTH_LONG).show();
+
+                    Toast.makeText(LoadCard.this, "Load successful! New balance is ₱" + newBalanceString, Toast.LENGTH_LONG).show();
 
                     // Go back to the previous screen (e.g., HomePage)
                     finish();
@@ -239,8 +249,6 @@ public class LoadCard extends AppCompatActivity {
                     String errorMsg = "Load failed. Server responded with error.";
                     if (response.errorBody() != null) {
                         try {
-                            // Try to parse error message from server if available
-                            // This depends on how your backend sends errors
                             errorMsg += " " + response.errorBody().string();
                         } catch (Exception e) { Log.e("LoadCard", "Error parsing error body", e); }
                     } else {
@@ -259,7 +267,7 @@ public class LoadCard extends AppCompatActivity {
                 Log.e("LoadCard", "Network failure: ", t);
                 Toast.makeText(LoadCard.this, "Load failed: Could not connect to server. " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
-        }); // <-- The enqueue call was missing its content, now it's complete
+        });
     }
 
     @Override
@@ -267,28 +275,39 @@ public class LoadCard extends AppCompatActivity {
         super.onBackPressed(); // Default behavior finishes the activity
     }
 
-    // Optional: Method to fetch balance when screen loads
+    // --- NEW IMPLEMENTATION: Fetch balance when screen loads ---
     private void fetchCurrentBalance() {
         String rfid = sessionManager.getUserRfid();
         if (rfid != null) {
+            tvCurrentBalance.setText("Loading..."); // Show loading state
             apiService.getStudentProfile(rfid).enqueue(new Callback<StudentProfile>() {
                 @Override
                 public void onResponse(Call<StudentProfile> call, Response<StudentProfile> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        tvCurrentBalance.setText("₱" + String.format("%.2f", response.body().balance));
+                        // Display balance formatted to 2 decimal places using Locale.US for consistency
+                        tvCurrentBalance.setText("₱" + String.format(Locale.US, "%.2f", response.body().balance));
                     } else {
                         tvCurrentBalance.setText("₱?.??"); // Indicate error fetching
+                        Toast.makeText(LoadCard.this, "Could not fetch current balance.", Toast.LENGTH_SHORT).show();
                     }
                 }
                 @Override
                 public void onFailure(Call<StudentProfile> call, Throwable t) {
                     tvCurrentBalance.setText("₱?.??"); // Indicate error fetching
+                    Toast.makeText(LoadCard.this, "Network Error fetching balance.", Toast.LENGTH_SHORT).show();
                     Log.e("LoadCard", "Failed to fetch initial balance", t);
                 }
             });
         } else {
-            // Handle not being logged in if needed
+            // Handle not being logged in
             tvCurrentBalance.setText("₱----.--");
+            Toast.makeText(this, "Error: Not logged in.", Toast.LENGTH_SHORT).show();
+            // Optional: Redirect to login
+            Intent intent = new Intent(LoadCard.this, Login.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
         }
     }
+    // --- END NEW IMPLEMENTATION ---
 }
