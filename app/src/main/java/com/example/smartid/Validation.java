@@ -1,13 +1,15 @@
 package com.example.smartid;
 
 import android.content.Intent;
+import android.database.Cursor; // Import Cursor
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
+import android.provider.OpenableColumns; // Import OpenableColumns
+// import android.view.View; // View import no longer needed unless used elsewhere
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+// import android.widget.LinearLayout; // LinearLayout import no longer needed unless used elsewhere
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,12 +19,13 @@ import androidx.activity.result.contract.ActivityResultContracts;
 public class Validation extends AppCompatActivity {
 
     private ImageButton btnBack;
-    private ImageView profileImage;
+    private ImageView profileImage; // Consider making this non-interactive or load actual user image
     private TextView tvUserName, tvStudentId;
     private Button btnProofEnrollment, btnSubmit;
-    private Button cardDetailsButton, homeButton, profileButton;
+    // --- Removed bottom navigation Buttons ---
+    // private Button cardDetailsButton, homeButton, profileButton;
 
-    // User data
+    // User data (better to pass via Intent or load from storage)
     private String userName = "Cloyd Harley V. Taneda";
     private String studentId = "2025-12345";
     private Uri selectedDocumentUri = null;
@@ -36,10 +39,13 @@ public class Validation extends AppCompatActivity {
         setContentView(R.layout.activity_validation);
 
         initializeViews();
+        setupDocumentPicker(); // Initialize before setting click listeners that use it
         setupClickListeners();
-        setupBottomNavigation();
-        setupDocumentPicker();
+        // --- setupBottomNavigation() call removed ---
         loadUserData();
+
+        // Initially disable submit button until a document is selected
+        btnSubmit.setEnabled(false);
     }
 
     private void initializeViews() {
@@ -49,9 +55,33 @@ public class Validation extends AppCompatActivity {
         tvStudentId = findViewById(R.id.tv_student_id);
         btnProofEnrollment = findViewById(R.id.btn_proof_enrollment);
         btnSubmit = findViewById(R.id.btn_submit);
-        cardDetailsButton = findViewById(R.id.CardDetails_Button);
-        homeButton = findViewById(R.id.Home_Button);
-        profileButton = findViewById(R.id.Profile_Button);
+
+        // --- Removed findViewById for bottom navigation Buttons ---
+        // cardDetailsButton = findViewById(R.id.CardDetails_Button);
+        // homeButton = findViewById(R.id.Home_Button);
+        // profileButton = findViewById(R.id.Profile_Button);
+    }
+
+    private void setupDocumentPicker() {
+        // Initialize the document picker launcher
+        documentPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    // This lambda is called when a file is selected
+                    if (uri != null) {
+                        selectedDocumentUri = uri;
+                        onDocumentSelected(uri);
+                        btnSubmit.setEnabled(true); // Enable submit button after selection
+                    } else {
+                        // User cancelled picker
+                        Toast.makeText(this, "File selection cancelled", Toast.LENGTH_SHORT).show();
+                        // Keep submit button disabled if no document was previously selected
+                        if (selectedDocumentUri == null) {
+                            btnSubmit.setEnabled(false);
+                        }
+                    }
+                }
+        );
     }
 
     private void setupClickListeners() {
@@ -64,162 +94,149 @@ public class Validation extends AppCompatActivity {
         // Submit button - process validation
         btnSubmit.setOnClickListener(v -> submitValidation());
 
-        // Profile image click - option to change profile picture
-        profileImage.setOnClickListener(v ->
+        // Profile image click - currently does nothing useful
+        /* profileImage.setOnClickListener(v ->
                 Toast.makeText(this, "Profile picture functionality coming soon", Toast.LENGTH_SHORT).show());
+        */
     }
 
+    // --- setupBottomNavigation() method removed ---
+    /*
     private void setupBottomNavigation() {
-        // Card Details button
-        cardDetailsButton.setOnClickListener(v ->
-                Toast.makeText(this, "Show Card Details", Toast.LENGTH_SHORT).show());
-
-        // Home button
-        homeButton.setOnClickListener(v -> {
-            startActivity(new Intent(Validation.this, HomePage.class));
-            finish();
-        });
-
-        // Profile button
-        profileButton.setOnClickListener(v ->
-                Toast.makeText(this, "Go to Profile Page", Toast.LENGTH_SHORT).show());
+        // ... method content removed ...
     }
-
-    private void setupDocumentPicker() {
-        // Initialize the document picker launcher
-        documentPickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                uri -> {
-                    if (uri != null) {
-                        selectedDocumentUri = uri;
-                        onDocumentSelected(uri);
-                    }
-                }
-        );
-    }
+    */
 
     private void loadUserData() {
-        // Load user data (in a real app, this would come from SharedPreferences, database, or API)
+        // TODO: In a real app, load this from SharedPreferences, database, or API
         tvUserName.setText(userName);
         tvStudentId.setText("Student ID: " + studentId);
+        // Load actual profile image here if available
     }
 
     private void openDocumentPicker() {
         try {
-            // Launch document picker for PDF, images, or documents
-            documentPickerLauncher.launch("*/*");
-            Toast.makeText(this, "Select your enrollment document", Toast.LENGTH_SHORT).show();
+            // Launch document picker - restrict types if possible (e.g., PDF and images)
+            // documentPickerLauncher.launch("application/pdf|image/*"); // Example filter
+            documentPickerLauncher.launch("*/*"); // Allows any file type
+            // Toast.makeText(this, "Select your enrollment document", Toast.LENGTH_SHORT).show(); // Maybe redundant
+        } catch (android.content.ActivityNotFoundException e) {
+            // Handle case where no app can handle the GetContent intent
+            Toast.makeText(this, "No app found to pick files.", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, "Error opening file picker", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error opening file picker: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
     private void onDocumentSelected(Uri uri) {
-        // Handle the selected document
         String fileName = getFileName(uri);
+        String buttonText = "📁 " + (fileName != null ? fileName : "Document Selected");
 
-        // Update button text to show selected file
-        btnProofEnrollment.setText("📁  " + (fileName != null ? fileName : "Document Selected"));
+        btnProofEnrollment.setText(buttonText);
+        // Optional: Update icon tint or state if using an icon on the button
+        // btnProofEnrollment.setIconTint(...)
 
-        Toast.makeText(this, "Document selected: " + (fileName != null ? fileName : "Unknown"),
-                Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Selected: " + (fileName != null ? fileName : "Unknown file"), Toast.LENGTH_SHORT).show();
     }
 
     private void submitValidation() {
         if (selectedDocumentUri == null) {
-            Toast.makeText(this, "Please select a proof of enrollment document first",
-                    Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Please select a proof of enrollment document first.", Toast.LENGTH_LONG).show();
+            // Ensure button remains disabled if somehow clicked when URI is null
+            btnSubmit.setEnabled(false);
             return;
         }
 
         // Show loading/processing message
         Toast.makeText(this, "Submitting validation request...", Toast.LENGTH_SHORT).show();
-
-        // In a real app, this would upload the document and user data to a server
-        processValidationSubmission();
-    }
-
-    private void processValidationSubmission() {
-        // Simulate processing time
-        btnSubmit.setEnabled(false);
+        btnSubmit.setEnabled(false); // Disable during processing
         btnSubmit.setText("Processing...");
 
-        // Simulate network request (replace with actual API call)
-        new Thread(() -> {
-            try {
-                Thread.sleep(2000); // Simulate 2 second processing time
+        // TODO: Implement actual document upload to your server here
+        // This involves network calls (use Volley, Retrofit, etc.)
+        // and handling the file URI correctly (using ContentResolver)
 
-                runOnUiThread(() -> {
-                    // Reset button state
-                    btnSubmit.setEnabled(true);
-                    btnSubmit.setText("Submit");
+        processValidationSubmission(); // Keep simulation for now
+    }
 
-                    // Show success message
-                    showValidationSuccess();
-                });
-            } catch (InterruptedException e) {
-                runOnUiThread(() -> {
-                    btnSubmit.setEnabled(true);
-                    btnSubmit.setText("Submit");
-                    Toast.makeText(this, "Submission failed. Please try again.",
-                            Toast.LENGTH_LONG).show();
-                });
+    // --- SIMULATION METHOD --- Replace with real upload logic ---
+    private void processValidationSubmission() {
+        // Simulate network request
+        new android.os.Handler(getMainLooper()).postDelayed(() -> {
+            // Simulate success or failure
+            boolean success = true; // Change to false to test failure
+
+            if (success) {
+                showValidationSuccess();
+            } else {
+                showValidationFailure();
             }
-        }).start();
+            // Re-enable button regardless of success/failure after processing
+            btnSubmit.setText("Submit");
+            // Keep it disabled after successful submission? Or allow re-submission?
+            // btnSubmit.setEnabled(!success); // Example: Disable after success
+            btnSubmit.setEnabled(true); // Re-enable for now
+
+        }, 2000); // Simulate 2 second delay
     }
 
     private void showValidationSuccess() {
-        Toast.makeText(this, "Validation submitted successfully! " +
-                        "You will receive confirmation within 24-48 hours.",
-                Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Validation submitted! Confirmation within 24-48 hours.", Toast.LENGTH_LONG).show();
 
         // Reset the form
         selectedDocumentUri = null;
         btnProofEnrollment.setText("📁  Proof of Enrollment / Registration");
+        btnSubmit.setEnabled(false); // Disable after successful submission
 
-        // Optionally navigate back to home
-        // finish();
+        // Optionally navigate back after a short delay
+        new android.os.Handler(getMainLooper()).postDelayed(this::finish, 1500); // Close after 1.5s
     }
 
+    private void showValidationFailure() {
+        Toast.makeText(this, "Submission failed. Please check connection and try again.", Toast.LENGTH_LONG).show();
+        // Button is re-enabled in processValidationSubmission's final block
+    }
+    // --- END SIMULATION ---
+
+    // Utility method to get filename from URI
     private String getFileName(Uri uri) {
         String result = null;
-        if (uri.getScheme().equals("content")) {
-            try (android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+        if (uri != null && "content".equals(uri.getScheme())) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
-                    int nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
                     if (nameIndex >= 0) {
                         result = cursor.getString(nameIndex);
                     }
                 }
             } catch (Exception e) {
-                // Handle exception
+                // Log error or handle gracefully
+                result = "File"; // Fallback name
             }
         }
-        if (result == null) {
+        if (result == null && uri != null) {
             result = uri.getPath();
-            int cut = result.lastIndexOf('/');
-            if (cut != -1) {
-                result = result.substring(cut + 1);
+            if (result != null) {
+                int cut = result.lastIndexOf('/');
+                if (cut != -1) {
+                    result = result.substring(cut + 1);
+                }
+            } else {
+                result = "File"; // Fallback name
             }
         }
-        return result;
+        return result != null ? result : "File"; // Final fallback
     }
 
-    // Method to update user information (if called from other activities)
-    public void updateUserInfo(String name, String id) {
-        this.userName = name;
-        this.studentId = id;
-        loadUserData();
-    }
-
-    // Method to check validation status
-    public boolean hasValidationDocument() {
-        return selectedDocumentUri != null;
-    }
+    // Unused methods can be kept or removed
+    /*
+    public void updateUserInfo(String name, String id) { ... }
+    public boolean hasValidationDocument() { ... }
+    */
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        finish();
+        // Default behavior finishes the activity
     }
 }

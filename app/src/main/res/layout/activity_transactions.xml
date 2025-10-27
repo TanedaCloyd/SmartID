@@ -7,7 +7,6 @@
     android:background="@color/blue"
     tools:context=".Transactions">
 
-    <!-- Header -->
     <LinearLayout
         android:id="@+id/header_layout"
         android:layout_width="match_parent"
@@ -42,7 +41,6 @@
             android:layout_height="40dp" />
     </LinearLayout>
 
-    <!-- Content ScrollView -->
     <ScrollView
         android:id="@+id/scroll_view_content"
         android:layout_width="0dp"
@@ -51,7 +49,7 @@
         app:layout_constraintTop_toBottomOf="@id/header_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -59,18 +57,16 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Search Bar -->
-            <SearchView
+            <androidx.appcompat.widget.SearchView
                 android:id="@+id/search_transactions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:background="@color/green"
-                android:queryHint="Search Transactions"
-                android:iconifiedByDefault="false"
-                android:searchIcon="@drawable/search" />
+                app:queryHint="Search Transactions"
+                app:iconifiedByDefault="false"
+                app:searchIcon="@drawable/search" />
 
-            <!-- Filter Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -113,14 +109,12 @@
 
             </LinearLayout>
 
-            <!-- Transaction Items -->
             <LinearLayout
-                android:id="@+id/transaction_list"
+                android:id="@+id/transaction_list_placeholder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- Train Ride Transaction 1 -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -128,27 +122,24 @@
                     app:cardBackgroundColor="@color/green"
                     app:cardElevation="2dp"
                     android:layout_marginBottom="12dp">
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:padding="16dp"
                         android:gravity="center_vertical">
-
                         <ImageView
                             android:layout_width="40dp"
                             android:layout_height="40dp"
-                            android:background="@drawable/train"
-                            android:padding="8dp" />
-
+                            android:src="@drawable/train"
+                            android:padding="8dp"
+                            android:contentDescription="Train Icon"/>
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:layout_marginStart="16dp">
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -156,7 +147,6 @@
                                 android:textColor="@color/black"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -164,9 +154,7 @@
                                 android:textColor="@color/black"
                                 android:textSize="12sp"
                                 android:alpha="0.7" />
-
                         </LinearLayout>
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -174,11 +162,9 @@
                             android:textColor="@android:color/holo_red_dark"
                             android:textSize="16sp"
                             android:textStyle="bold" />
-
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Load Transaction -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -186,27 +172,24 @@
                     app:cardBackgroundColor="@color/green"
                     app:cardElevation="2dp"
                     android:layout_marginBottom="12dp">
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:padding="16dp"
                         android:gravity="center_vertical">
-
                         <ImageView
                             android:layout_width="40dp"
                             android:layout_height="40dp"
-                            android:background="@drawable/load"
-                            android:padding="8dp" />
-
+                            android:src="@drawable/load"
+                            android:padding="8dp"
+                            android:contentDescription="Load Icon"/>
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:layout_marginStart="16dp">
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -214,7 +197,6 @@
                                 android:textColor="@color/black"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -222,9 +204,7 @@
                                 android:textColor="@color/black"
                                 android:textSize="12sp"
                                 android:alpha="0.7" />
-
                         </LinearLayout>
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -232,11 +212,9 @@
                             android:textColor="@android:color/holo_green_dark"
                             android:textSize="16sp"
                             android:textStyle="bold" />
-
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Train Ride Transaction 2 -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -244,27 +222,24 @@
                     app:cardBackgroundColor="@color/green"
                     app:cardElevation="2dp"
                     android:layout_marginBottom="12dp">
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:padding="16dp"
                         android:gravity="center_vertical">
-
                         <ImageView
                             android:layout_width="40dp"
                             android:layout_height="40dp"
-                            android:background="@drawable/train"
-                            android:padding="8dp" />
-
+                            android:src="@drawable/train"
+                            android:padding="8dp"
+                            android:contentDescription="Train Icon"/>
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:orientation="vertical"
                             android:layout_marginStart="16dp">
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -272,7 +247,6 @@
                                 android:textColor="@color/black"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
-
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
@@ -280,9 +254,7 @@
                                 android:textColor="@color/black"
                                 android:textSize="12sp"
                                 android:alpha="0.7" />
-
                         </LinearLayout>
-
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
@@ -290,7 +262,6 @@
                             android:textColor="@android:color/holo_red_dark"
                             android:textSize="16sp"
                             android:textStyle="bold" />
-
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
@@ -298,53 +269,5 @@
 
         </LinearLayout>
     </ScrollView>
-
-    <!-- Bottom Navigation -->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/green"
-        app:itemTextColor="@color/black"
-        app:labelVisibilityMode="labeled"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:menu="@menu/bottom_nav_menu"
-        app:elevation="8dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/CardDetails_Button"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Card Details"
-                android:backgroundTint="@color/black"
-                android:textColor="@color/white" />
-
-            <Button
-                android:id="@+id/Home_Button"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Home"
-                android:backgroundTint="@color/black"
-                android:textColor="@color/white" />
-
-            <Button
-                android:id="@+id/Profile_Button"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Profile"
-                android:backgroundTint="@color/black"
-                android:textColor="@color/white" />
-        </LinearLayout>
-    </com.google.android.material.bottomnavigation.BottomNavigationView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

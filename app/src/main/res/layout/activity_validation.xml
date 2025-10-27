@@ -7,7 +7,6 @@
     android:background="@color/blue"
     tools:context=".Validation">
 
-    <!-- Header -->
     <LinearLayout
         android:id="@+id/header_layout"
         android:layout_width="match_parent"
@@ -42,127 +41,83 @@
             android:layout_height="40dp" />
     </LinearLayout>
 
-    <!-- Content -->
-    <LinearLayout
-        android:layout_width="match_parent"
+    <ScrollView
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:orientation="vertical"
-        android:padding="32dp"
-        android:gravity="center_horizontal"
+        android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/header_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottom_navigation">
+        app:layout_constraintBottom_toBottomOf="parent"> <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:orientation="vertical"
+        android:padding="32dp"
+        android:gravity="center_horizontal">
 
-        <!-- Profile Picture -->
         <ImageView
             android:id="@+id/profile_image"
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:layout_marginTop="40dp"
             android:layout_marginBottom="24dp"
-            android:background="@drawable/smartid_logo"
-            android:scaleType="centerInside"
+            android:src="@drawable/smartid_logo" android:scaleType="centerInside"
             android:padding="20dp" />
 
-        <!-- User Name -->
         <TextView
             android:id="@+id/tv_user_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Cloyd Harley V. Taneda"
-            android:textColor="@color/black"
+            tools:text="Cloyd Harley V. Taneda" android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
             android:layout_marginBottom="4dp" />
 
-        <!-- Student ID -->
         <TextView
             android:id="@+id/tv_student_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Student ID: 2025-12345"
-            android:textColor="@color/black"
+            tools:text="Student ID: 2025-12345" android:textColor="@color/black"
             android:textSize="14sp"
             android:layout_marginBottom="60dp" />
 
-        <!-- Validation Label -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Validation"
-            android:textColor="@color/black"
+            android:text="Validation Document" android:textColor="@color/black"
             android:textSize="14sp"
             android:textStyle="bold"
             android:layout_marginBottom="8dp"
             android:gravity="start" />
 
-        <!-- Proof of Enrollment Button -->
         <Button
             android:id="@+id/btn_proof_enrollment"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="📁  Proof of Enrollment / Registration"
+            android:layout_height="wrap_content" android:minHeight="48dp" android:text="📁  Proof of Enrollment / Registration"
             android:textColor="@color/black"
             android:textSize="14sp"
             android:backgroundTint="@color/green"
             android:gravity="start|center_vertical"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:layout_marginBottom="80dp"
-            style="@style/Widget.Material3.Button.UnelevatedButton" />
+            android:layout_marginBottom="40dp" style="@style/Widget.Material3.Button.UnelevatedButton"
+            app:iconPadding="8dp"
+            app:iconGravity="start"/>
 
-        <!-- Submit Button -->
         <Button
             android:id="@+id/btn_submit"
-            android:layout_width="120dp"
-            android:layout_height="40dp"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:minWidth="120dp" android:minHeight="48dp"
             android:text="Submit"
             android:textColor="@color/black"
             android:textSize="14sp"
             android:backgroundTint="@color/green"
             style="@style/Widget.Material3.Button.UnelevatedButton" />
 
-    </LinearLayout>
-
-    <!-- Bottom Navigation -->
-    <LinearLayout
-        android:id="@+id/bottom_navigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/green"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <Button
-            android:id="@+id/CardDetails_Button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Card Details"
-            android:backgroundTint="@color/black"
-            android:textColor="@color/white" />
-
-        <Button
-            android:id="@+id/Home_Button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Home"
-            android:backgroundTint="@color/black"
-            android:textColor="@color/white" />
-
-        <Button
-            android:id="@+id/Profile_Button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Profile"
-            android:backgroundTint="@color/black"
-            android:textColor="@color/white" />
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="32dp"/>
 
     </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
