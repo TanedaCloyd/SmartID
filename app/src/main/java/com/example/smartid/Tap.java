@@ -1,6 +1,9 @@
 package com.example.smartid;
+
 import com.google.gson.annotations.SerializedName;
 import java.util.Date;
+import java.util.Locale; // ** ADD THIS IMPORT **
+import android.util.Log;  // ** ADD THIS IMPORT if using Log **
 
 public class Tap {
     @SerializedName("tap_type")
@@ -15,18 +18,56 @@ public class Tap {
     double fareAmount;
 
     public String getDescription() {
-        if ("top_up".equals(tapType)) return "Loaded Amount via " + originStation;
-        if ("entry".equals(tapType)) return "Entry at " + originStation;
-        if ("exit".equals(tapType)) return "Ride: " + originStation + " to " + destinationStation;
-        if ("admin_correction".equals(tapType)) return "Admin Correction: " + destinationStation;
-        if ("admin_penalty".equals(tapType)) return "Admin Action: Penalty/Reset"; // Added
-        return "Transaction";
+        // Log the type being processed (optional, for debugging)
+        // Log.d("TapDescription", "Processing tapType: '" + tapType + "'");
+
+        // Handle null values gracefully
+        String origin = (originStation != null && !originStation.isEmpty()) ? originStation : "Unknown Station";
+        String destination = (destinationStation != null && !destinationStation.isEmpty()) ? destinationStation : "Unknown Station";
+        String type = (tapType != null) ? tapType : "null"; // Handle null tapType
+
+        switch (type) {
+            case "top_up":
+                return "Load via " + origin;
+            case "entry":
+                return "Entered at: " + origin;
+            case "journey": // Handle the 'journey' type sent by the backend
+                return "Ride: " + origin + " → " + destination;
+            case "admin_correction":
+                return "Correction: " + destination;
+            case "admin_penalty":
+                return "Admin Action (Penalty/Reset)";
+            default:
+                // Log if the fallback is reached (optional, for debugging)
+                // Log.w("TapDescription", "Unknown tapType encountered: '" + type + "'");
+                return "Unknown Transaction [" + type + "]"; // Show the unknown type
+        }
     }
+
+    // --- ONLY ONE getAmountString() method ---
     public String getAmountString() {
-        if ("top_up".equals(tapType)) return "+₱" + String.format("%.2f", fareAmount);
-        // Consider admin_penalty might have 0 amount
-        if ("admin_penalty".equals(tapType) && fareAmount == 0) return "₱0.00";
-        return "-₱" + String.format("%.2f", fareAmount);
+        String type = (tapType != null) ? tapType : "null";
+        switch (type) {
+            case "top_up":
+                // Use Locale.US for consistent formatting
+                return "+₱" + String.format(Locale.US, "%.2f", fareAmount);
+            case "admin_penalty":
+                // Show P0.00 specifically for zero-amount penalties
+                if (fareAmount == 0) return "₱0.00";
+                // Otherwise treat penalty like a fare deduction
+                // FALL THROUGH intentional for non-zero penalty
+            case "entry": // Entry usually has no fare amount displayed, but handle if it does
+            case "journey": // Treat journey like exit
+            case "exit": // Keep exit handling
+            case "admin_correction":
+                // Use Locale.US for consistent formatting
+                return "-₱" + String.format(Locale.US, "%.2f", fareAmount);
+            default:
+                return "₱?.??";
+        }
     }
+    // --- END getAmountString() ---
+
+    // isLoad() remains the same
     public boolean isLoad() { return "top_up".equals(tapType); }
 }
