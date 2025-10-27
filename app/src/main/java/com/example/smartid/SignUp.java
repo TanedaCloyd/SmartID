@@ -12,20 +12,20 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.core.content.ContextCompat; // Import for safer color handling
 
 import com.google.android.material.textfield.TextInputEditText;
 
 public class SignUp extends AppCompatActivity {
 
-    private TextInputEditText etFullName, etEmail, etStudentId, etSchool, etPassword, etConfirmPassword;
+    // --- UPDATED: Removed etConfirmPassword ---
+    private TextInputEditText etFullName, etEmail, etStudentId, etSchool, etPassword;
     private Button btnSignUp;
     private TextView tvSignIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_signup); // Set the new signup layout
+        setContentView(R.layout.activity_signup);
 
         // Find views by their ID
         etFullName = findViewById(R.id.et_full_name);
@@ -33,7 +33,6 @@ public class SignUp extends AppCompatActivity {
         etStudentId = findViewById(R.id.et_student_id);
         etSchool = findViewById(R.id.et_school);
         etPassword = findViewById(R.id.et_password);
-        etConfirmPassword = findViewById(R.id.et_confirm_password);
         btnSignUp = findViewById(R.id.btn_signup);
         tvSignIn = findViewById(R.id.tv_sign_in);
 
@@ -49,26 +48,21 @@ public class SignUp extends AppCompatActivity {
                 String studentId = etStudentId.getText().toString().trim();
                 String school = etSchool.getText().toString().trim();
                 String password = etPassword.getText().toString().trim();
-                String confirmPassword = etConfirmPassword.getText().toString().trim();
 
-                // --- Form Validation ---
-                if (fullName.isEmpty() || email.isEmpty() || studentId.isEmpty() || school.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+                // --- Form Validation (UPDATED) ---
+                if (fullName.isEmpty() || email.isEmpty() || studentId.isEmpty() || school.isEmpty() || password.isEmpty()) {
                     Toast.makeText(SignUp.this, "Please fill out all fields", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    // --- THIS IS THE FIX ---
                     Toast.makeText(SignUp.this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 if (password.length() < 6) {
                     Toast.makeText(SignUp.this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (!password.equals(confirmPassword)) {
-                    Toast.makeText(SignUp.this, "Passwords do not match", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -87,7 +81,7 @@ public class SignUp extends AppCompatActivity {
             }
         });
 
-        // "Already have an account? Sign in" Text Click
+        // "Sign in" Text Click
         tvSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,15 +97,15 @@ public class SignUp extends AppCompatActivity {
     // --- THIS METHOD IS NOW FIXED ---
     private void styleSignInText() {
         // 1. Get the full text from the TextView
-        String text = tvSignIn.getText().toString(); // This will be "Already have an account? Sign in"
+        String text = tvSignIn.getText().toString(); // This will be "Sign in"
         SpannableString ss = new SpannableString(text);
 
         // 2. Find the color from your colors.xml
         // (Make sure R.color.green exists in your colors.xml)
-        int highlightColor = ContextCompat.getColor(this, R.color.green); // Safer way to get color
+        int highlightColor = getResources().getColor(R.color.green);
 
-        // 3. Apply the color to the "Sign in" part (which starts at index 26)
-        ss.setSpan(new ForegroundColorSpan(highlightColor), 26, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        // 3. UPDATED: Apply the color to the "Sign in" part (which now starts at index 0)
+        ss.setSpan(new ForegroundColorSpan(highlightColor), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         tvSignIn.setText(ss);
     }
