@@ -17,7 +17,6 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-
         <ImageButton
             android:id="@+id/btn_back"
             android:layout_width="40dp"
@@ -25,20 +24,15 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/arrow"
             android:contentDescription="Back" />
-
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Validation"
-            android:textColor="@color/black"
+            android:text="Validation Status" android:textColor="@color/black"
             android:textSize="20sp"
             android:textStyle="bold"
             android:gravity="center" />
-
-        <View
-            android:layout_width="40dp"
-            android:layout_height="40dp" />
+        <View android:layout_width="40dp" android:layout_height="40dp" />
     </LinearLayout>
 
     <ScrollView
@@ -48,76 +42,176 @@
         app:layout_constraintTop_toBottomOf="@id/header_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"> <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" android:orientation="vertical"
-        android:padding="32dp"
-        android:gravity="center_horizontal">
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView
-            android:id="@+id/profile_image"
-            android:layout_width="120dp"
-            android:layout_height="120dp"
-            android:layout_marginTop="40dp"
-            android:layout_marginBottom="24dp"
-            android:src="@drawable/smartid_logo" android:scaleType="centerInside"
-            android:padding="20dp" />
-
-        <TextView
-            android:id="@+id/tv_user_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:text="Cloyd Harley V. Taneda" android:textColor="@color/black"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="4dp" />
-
-        <TextView
-            android:id="@+id/tv_student_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            tools:text="Student ID: 2025-2310239" android:textColor="@color/black"
-            android:textSize="14sp"
-            android:layout_marginBottom="60dp" />
-
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Validation Document" android:textColor="@color/black"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:gravity="start" />
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center_horizontal">
 
-        <Button
-            android:id="@+id/btn_proof_enrollment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:minHeight="48dp" android:text="📁  Proof of Enrollment / Registration"
-            android:textColor="@color/black"
-            android:textSize="14sp"
-            android:backgroundTint="@color/green"
-            android:gravity="start|center_vertical"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            android:layout_marginBottom="40dp" style="@style/Widget.Material3.Button.UnelevatedButton"
-            app:iconPadding="8dp"
-            app:iconGravity="start"/>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Current Status"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp"/>
 
-        <Button
-            android:id="@+id/btn_submit"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:minWidth="120dp" android:minHeight="48dp"
-            android:text="Submit"
-            android:textColor="@color/black"
-            android:textSize="14sp"
-            android:backgroundTint="@color/green"
-            style="@style/Widget.Material3.Button.UnelevatedButton" />
+            <TextView
+                android:id="@+id/tv_validation_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textColor="@color/primary_blue_dark"
+                android:textStyle="bold"
+                android:padding="12dp"
+                android:background="@color/green"
+                android:layout_marginBottom="16dp"
+                tools:text="Validated"/>
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="32dp"/>
+            <TextView
+                android:id="@+id/tv_card_expiry"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="4dp"
+                tools:text="Card Expires: 2028-10-27"/>
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tv_annual_renewal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:layout_marginBottom="24dp"
+                tools:text="Discount Renewal Due: 2026-10-27"/>
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Submitted Documents"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/iv_proof_thumbnail"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_baseline_credit_card_24"
+                    android:background="@color/light_gray"
+                    android:padding="8dp"
+                    android:contentDescription="Proof of Enrollment Thumbnail"
+                    android:layout_marginEnd="16dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Proof of Enrollment"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"/>
+                    <Button
+                        android:id="@+id/btn_update_proof"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Update File"
+                        android:textColor="@color/black"
+                        android:layout_marginTop="8dp"/>
+                    <TextView
+                        android:id="@+id/tv_proof_upload_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:visibility="gone"
+                        tools:text="Uploading..."
+                        tools:visibility="visible"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="32dp"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:id="@+id/iv_selfie_thumbnail"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_baseline_account_person_24"
+                    android:background="@color/light_gray"
+                    android:padding="8dp"
+                    android:contentDescription="Selfie Thumbnail"
+                    android:layout_marginEnd="16dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Selfie"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"/>
+                    <Button
+                        android:id="@+id/btn_update_selfie"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Update File"
+                        android:textColor="@color/black"
+                        android:layout_marginTop="8dp"/>
+                    <TextView
+                        android:id="@+id/tv_selfie_upload_status"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="12sp"
+                        android:visibility="gone"
+                        tools:text="Uploading..."
+                        tools:visibility="visible"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_submit_updates"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="160dp"
+                android:text="Save Document Updates"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/green"
+                android:enabled="false"
+                style="@style/Widget.Material3.Button.UnelevatedButton" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="32dp"/>
+
+        </LinearLayout>
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
