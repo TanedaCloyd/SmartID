@@ -76,7 +76,7 @@
             android:id="@+id/tv_student_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            tools:text="Student ID: 2025-12345" android:textColor="@color/black"
+            tools:text="Student ID: 2025-2310239" android:textColor="@color/black"
             android:textSize="14sp"
             android:layout_marginBottom="60dp" />
 

@@ -8,16 +8,21 @@
     tools:context=".HomePage">
 
     <ScrollView
-        android:id="@+id/scrollView" android:layout_width="0dp"
+        android:id="@+id/scrollView"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:fillViewport="true" app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:gravity="center_horizontal"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
             android:paddingTop="40dp"
             android:paddingBottom="40dp"
@@ -27,10 +32,8 @@
             <ImageView
                 android:id="@+id/iv_logo"
                 android:layout_width="wrap_content"
-                android:layout_height="180dp"
-                android:adjustViewBounds="true"
-                android:layout_marginTop="32dp"
-                android:layout_marginBottom="32dp"
+                android:layout_height="240dp"     android:adjustViewBounds="true"
+                android:layout_marginTop="32dp"     android:layout_marginBottom="32dp"
                 android:contentDescription="SmartID Logo"
                 android:src="@drawable/smartid_logo" />
 

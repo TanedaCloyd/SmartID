@@ -100,25 +100,25 @@
 
             <LinearLayout
                 android:id="@+id/menu_edit_profile"
-                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon" android:text="⚙️"/>
+                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon"/>
                 <TextView style="@style/ProfileMenuItemText" android:text="Edit Profile"/>
                 <TextView style="@style/ProfileMenuItemArrow" android:text="&gt;"/> </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/menu_notifications"
-                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon" android:text="🔔"/>
+                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon"/>
                 <TextView style="@style/ProfileMenuItemText" android:text="Notifications"/>
                 <TextView style="@style/ProfileMenuItemArrow" android:text="&gt;"/> </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/menu_security"
-                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon" android:text="🛡️"/>
+                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon"/>
                 <TextView style="@style/ProfileMenuItemText" android:text="Security"/>
                 <TextView style="@style/ProfileMenuItemArrow" android:text="&gt;"/> </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/menu_log_out"
-                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon" android:text="↪️"/>
+                style="@style/ProfileMenuItem"> <TextView style="@style/ProfileMenuItemIcon"/>
                 <TextView style="@style/ProfileMenuItemText"
                     android:text="Log Out"
                     android:textColor="@android:color/holo_red_dark"/> <TextView style="@style/ProfileMenuItemArrow" android:text="&gt;"/> </LinearLayout>

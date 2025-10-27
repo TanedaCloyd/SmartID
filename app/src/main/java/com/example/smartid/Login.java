@@ -4,9 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.ForegroundColorSpan;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -18,7 +15,8 @@ public class Login extends AppCompatActivity {
 
     private TextInputEditText etEmail, etPassword;
     private Button btnLogin;
-    private TextView tvSignUp, tvForgotPassword;
+    private TextView tvSignUp;
+    // private TextView tvForgotPassword; // Removed, this was pointing to the wrong ID
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +28,7 @@ public class Login extends AppCompatActivity {
         etPassword = findViewById(R.id.et_password);
         btnLogin = findViewById(R.id.btn_login);
         tvSignUp = findViewById(R.id.tv_sign_up);
-        tvForgotPassword = findViewById(R.id.tv_sign_up);
+        // tvForgotPassword = findViewById(R.id.tv_sign_up); // This was a bug
 
         // --- Set Click Listeners ---
 
@@ -54,6 +52,7 @@ public class Login extends AppCompatActivity {
 
                 // Navigate to HomePage
                 Intent intent = new Intent(Login.this, HomePage.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK); // Clears the login history
                 startActivity(intent);
                 finish(); // Close the login activity
             }
@@ -63,34 +62,17 @@ public class Login extends AppCompatActivity {
         tvSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // --- TODO: Create and launch your SignUpActivity ---
-                Toast.makeText(Login.this, "Sign up clicked!", Toast.LENGTH_SHORT).show();
+                // --- THIS IS THE UPDATE ---
+                // Navigate to your SignUp activity
+                Intent intent = new Intent(Login.this, SignUp.class);
+                startActivity(intent);
             }
         });
 
-        // Forgot Password Click
-        tvForgotPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // --- TODO: Create and launch your ForgotPasswordActivity ---
-                Toast.makeText(Login.this, "Forgot password clicked!", Toast.LENGTH_SHORT).show();
-            }
-        });
+        // "Forgot Password" listener removed
 
-        // --- Make "Sign up" text pink ---
-        styleSignUpText();
+        // "styleSignUpText()" method removed as text is already set in XML
     }
 
-    private void styleSignUpText() {
-        String text = "Don't have an Account? Sign up";
-        SpannableString ss = new SpannableString(text);
-
-        // Find the color from your colors.xml
-        int pinkColor = getResources().getColor(R.color.background_white);
-
-        // Apply the color to the "Sign up" part
-        ss.setSpan(new ForegroundColorSpan(pinkColor), 25, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        tvSignUp.setText(ss);
-    }
+    // "styleSignUpText()" method removed
 }

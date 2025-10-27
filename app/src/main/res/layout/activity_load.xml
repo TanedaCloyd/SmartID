@@ -173,10 +173,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
-                    <RadioButton
-                        android:id="@+id/rb_others"
-                        android:text="Others" style="@style/PaymentRadioButton"
-                        android:textColor="@color/black" />
+
                     <LinearLayout
                         android:id="@+id/layout_other_banks"
                         android:layout_width="match_parent"
