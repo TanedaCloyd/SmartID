@@ -1,204 +1,376 @@
 package com.example.smartid;
 
+import android.content.ContentResolver;
 import android.content.Intent;
-import android.database.Cursor; // Import Cursor
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.OpenableColumns; // Import OpenableColumns
-// import android.view.View; // View import no longer needed unless used elsewhere
+import android.provider.OpenableColumns;
+import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-// import android.widget.LinearLayout; // LinearLayout import no longer needed unless used elsewhere
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AppCompatActivity;
+
+// ** Import Glide **
+import com.bumptech.glide.Glide;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.ParseException; // Import ParseException
+import java.text.SimpleDateFormat; // Import SimpleDateFormat
+import java.util.Date; // Import Date
+import java.util.Locale; // Import Locale
+
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class Validation extends AppCompatActivity {
 
+    // UI Elements
     private ImageButton btnBack;
-    private ImageView profileImage; // Consider making this non-interactive or load actual user image
-    private TextView tvUserName, tvStudentId;
-    private Button btnProofEnrollment, btnSubmit;
-    // --- Removed bottom navigation Buttons ---
-    // private Button cardDetailsButton, homeButton, profileButton;
+    private TextView tvValidationStatus, tvCardExpiry, tvAnnualRenewal;
+    private ImageView ivProofThumbnail, ivSelfieThumbnail;
+    private Button btnUpdateProof, btnUpdateSelfie, btnSubmitUpdates;
+    private TextView tvProofUploadStatus, tvSelfieUploadStatus;
 
-    // User data (better to pass via Intent or load from storage)
-    private String userName = "Cloyd Harley V. Taneda";
-    private String studentId = "2025-12345";
-    private Uri selectedDocumentUri = null;
+    // State & Data
+    private SessionManager sessionManager;
+    private ApiService apiService;
+    private ActivityResultLauncher<String> proofPickerLauncher, selfiePickerLauncher;
+    private Uri newProofUri = null;
+    private Uri newSelfieUri = null;
+    private String currentProofUrl = null; // Store fetched URLs
+    private String currentSelfieUrl = null;
 
-    // Activity result launcher for file selection
-    private ActivityResultLauncher<String> documentPickerLauncher;
+    private SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US); // Adjust if your API date format is different
+    private SimpleDateFormat displayDateFormat = new SimpleDateFormat("MMM d, yyyy", Locale.US);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_validation);
+        setContentView(R.layout.activity_validation); // Ensure this matches your layout file name
+
+        sessionManager = new SessionManager(getApplicationContext());
+        apiService = ApiClient.getClient().create(ApiService.class);
+
+        // Check login
+        if (!sessionManager.isLoggedIn()) {
+            // Redirect to login
+            Intent intent = new Intent(Validation.this, Login.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            finish();
+            return;
+        }
 
         initializeViews();
-        setupDocumentPicker(); // Initialize before setting click listeners that use it
         setupClickListeners();
-        // --- setupBottomNavigation() call removed ---
-        loadUserData();
-
-        // Initially disable submit button until a document is selected
-        btnSubmit.setEnabled(false);
+        setupFilePickers();
+        fetchValidationStatus(); // Fetch data when screen loads
     }
 
     private void initializeViews() {
         btnBack = findViewById(R.id.btn_back);
-        profileImage = findViewById(R.id.profile_image);
-        tvUserName = findViewById(R.id.tv_user_name);
-        tvStudentId = findViewById(R.id.tv_student_id);
-        btnProofEnrollment = findViewById(R.id.btn_proof_enrollment);
-        btnSubmit = findViewById(R.id.btn_submit);
+        tvValidationStatus = findViewById(R.id.tv_validation_status);
+        tvCardExpiry = findViewById(R.id.tv_card_expiry);
+        tvAnnualRenewal = findViewById(R.id.tv_annual_renewal);
+        ivProofThumbnail = findViewById(R.id.iv_proof_thumbnail);
+        ivSelfieThumbnail = findViewById(R.id.iv_selfie_thumbnail);
+        btnUpdateProof = findViewById(R.id.btn_update_proof);
+        btnUpdateSelfie = findViewById(R.id.btn_update_selfie);
+        btnSubmitUpdates = findViewById(R.id.btn_submit_updates);
+        tvProofUploadStatus = findViewById(R.id.tv_proof_upload_status);
+        tvSelfieUploadStatus = findViewById(R.id.tv_selfie_upload_status);
 
-        // --- Removed findViewById for bottom navigation Buttons ---
-        // cardDetailsButton = findViewById(R.id.CardDetails_Button);
-        // homeButton = findViewById(R.id.Home_Button);
-        // profileButton = findViewById(R.id.Profile_Button);
-    }
-
-    private void setupDocumentPicker() {
-        // Initialize the document picker launcher
-        documentPickerLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                uri -> {
-                    // This lambda is called when a file is selected
-                    if (uri != null) {
-                        selectedDocumentUri = uri;
-                        onDocumentSelected(uri);
-                        btnSubmit.setEnabled(true); // Enable submit button after selection
-                    } else {
-                        // User cancelled picker
-                        Toast.makeText(this, "File selection cancelled", Toast.LENGTH_SHORT).show();
-                        // Keep submit button disabled if no document was previously selected
-                        if (selectedDocumentUri == null) {
-                            btnSubmit.setEnabled(false);
-                        }
-                    }
-                }
-        );
+        // Initial state
+        tvValidationStatus.setText("Loading...");
+        tvCardExpiry.setText("Card Expires: Loading...");
+        tvAnnualRenewal.setText("Discount Renewal Due: Loading...");
+        btnSubmitUpdates.setEnabled(false); // Disabled until a new file is chosen
     }
 
     private void setupClickListeners() {
-        // Back button - return to previous screen
         btnBack.setOnClickListener(v -> finish());
-
-        // Proof of Enrollment button - open document picker
-        btnProofEnrollment.setOnClickListener(v -> openDocumentPicker());
-
-        // Submit button - process validation
-        btnSubmit.setOnClickListener(v -> submitValidation());
-
-        // Profile image click - currently does nothing useful
-        /* profileImage.setOnClickListener(v ->
-                Toast.makeText(this, "Profile picture functionality coming soon", Toast.LENGTH_SHORT).show());
-        */
+        btnUpdateProof.setOnClickListener(v -> proofPickerLauncher.launch("image/*")); // Launch proof picker
+        btnUpdateSelfie.setOnClickListener(v -> selfiePickerLauncher.launch("image/*")); // Launch selfie picker
+        btnSubmitUpdates.setOnClickListener(v -> submitDocumentUpdates());
     }
 
-    // --- setupBottomNavigation() method removed ---
-    /*
-    private void setupBottomNavigation() {
-        // ... method content removed ...
-    }
-    */
+    private void setupFilePickers() {
+        proofPickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        newProofUri = uri;
+                        // Show selected image locally immediately
+                        Glide.with(this).load(uri).placeholder(R.drawable.ic_baseline_credit_card_24).into(ivProofThumbnail);
+                        tvProofUploadStatus.setText("New file selected");
+                        tvProofUploadStatus.setVisibility(View.VISIBLE);
+                        btnSubmitUpdates.setEnabled(true); // Enable submit
+                    }
+                });
 
-    private void loadUserData() {
-        // TODO: In a real app, load this from SharedPreferences, database, or API
-        tvUserName.setText(userName);
-        tvStudentId.setText("Student ID: " + studentId);
-        // Load actual profile image here if available
+        selfiePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.GetContent(),
+                uri -> {
+                    if (uri != null) {
+                        newSelfieUri = uri;
+                        // Show selected image locally immediately
+                        Glide.with(this).load(uri).placeholder(R.drawable.ic_baseline_account_person_24).into(ivSelfieThumbnail);
+                        tvSelfieUploadStatus.setText("New file selected");
+                        tvSelfieUploadStatus.setVisibility(View.VISIBLE);
+                        btnSubmitUpdates.setEnabled(true); // Enable submit
+                    }
+                });
     }
 
-    private void openDocumentPicker() {
+    private void fetchValidationStatus() {
+        String rfid = sessionManager.getUserRfid();
+        if (rfid == null) { /* Handle not logged in */ return; }
+
+        tvValidationStatus.setText("Loading..."); // Show loading state
+
+        apiService.getStudentProfile(rfid).enqueue(new Callback<StudentProfile>() {
+            @Override
+            public void onResponse(Call<StudentProfile> call, Response<StudentProfile> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    StudentProfile profile = response.body();
+                    updateUI(profile);
+                } else {
+                    Toast.makeText(Validation.this, "Failed to load validation status", Toast.LENGTH_SHORT).show();
+                    tvValidationStatus.setText("Error");
+                    // Show defaults or error states for other fields
+                    tvCardExpiry.setText("Card Expires: Error");
+                    tvAnnualRenewal.setText("Discount Renewal Due: Error");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<StudentProfile> call, Throwable t) {
+                Toast.makeText(Validation.this, "Network Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e("ValidationActivity", "Error fetching profile", t);
+                tvValidationStatus.setText("Network Error");
+                // Show defaults or error states for other fields
+                tvCardExpiry.setText("Card Expires: Network Error");
+                tvAnnualRenewal.setText("Discount Renewal Due: Network Error");
+            }
+        });
+    }
+
+    private void updateUI(StudentProfile profile) {
+        // Display Status and Dates
+        tvValidationStatus.setText(profile.status != null ? profile.status : "Unknown");
+        // You might need to adjust date formatting based on your backend response
+        tvCardExpiry.setText("Card Expires: " + formatDate(profile.card_expiry_date));
+        tvAnnualRenewal.setText("Discount Renewal Due: " + formatDate(profile.annual_renewal_date));
+
+        // Store current URLs
+        currentProofUrl = profile.proof_of_enrollment_url;
+        currentSelfieUrl = profile.selfie_url;
+
+        // Load Images using Glide
+        Glide.with(this)
+                .load(currentProofUrl)
+                .placeholder(R.drawable.ic_baseline_credit_card_24) // Placeholder drawable
+                .error(R.drawable.ic_baseline_credit_card_24) // Error drawable
+                .into(ivProofThumbnail);
+
+        Glide.with(this)
+                .load(currentSelfieUrl)
+                .placeholder(R.drawable.ic_baseline_account_person_24) // Placeholder drawable
+                .error(R.drawable.ic_baseline_account_person_24) // Error drawable
+                .into(ivSelfieThumbnail);
+
+        // Reset upload status indicators
+        tvProofUploadStatus.setVisibility(View.GONE);
+        tvSelfieUploadStatus.setVisibility(View.GONE);
+        newProofUri = null;
+        newSelfieUri = null;
+        btnSubmitUpdates.setEnabled(false); // Disable submit until new file chosen
+    }
+
+    // Helper to format date strings
+    private String formatDate(String dateString) {
+        if (dateString == null || dateString.isEmpty()) {
+            return "N/A";
+        }
         try {
-            // Launch document picker - restrict types if possible (e.g., PDF and images)
-            // documentPickerLauncher.launch("application/pdf|image/*"); // Example filter
-            documentPickerLauncher.launch("*/*"); // Allows any file type
-            // Toast.makeText(this, "Select your enrollment document", Toast.LENGTH_SHORT).show(); // Maybe redundant
-        } catch (android.content.ActivityNotFoundException e) {
-            // Handle case where no app can handle the GetContent intent
-            Toast.makeText(this, "No app found to pick files.", Toast.LENGTH_LONG).show();
+            // Try parsing the date assuming it comes in API format (e.g., ISO 8601 or YYYY-MM-DD)
+            // Adjust apiDateFormat if your backend sends a different format (e.g., "yyyy-MM-dd")
+            Date date = apiDateFormat.parse(dateString); // Or use a simpler format if just YYYY-MM-DD
+            return displayDateFormat.format(date);
+        } catch (ParseException e) {
+            Log.w("ValidationActivity", "Could not parse date: " + dateString);
+            return dateString; // Return original string if parsing fails
         } catch (Exception e) {
-            Toast.makeText(this, "Error opening file picker: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e("ValidationActivity", "Error formatting date", e);
+            return "Invalid Date";
         }
     }
 
-    private void onDocumentSelected(Uri uri) {
-        String fileName = getFileName(uri);
-        String buttonText = "📁 " + (fileName != null ? fileName : "Document Selected");
 
-        btnProofEnrollment.setText(buttonText);
-        // Optional: Update icon tint or state if using an icon on the button
-        // btnProofEnrollment.setIconTint(...)
-
-        Toast.makeText(this, "Selected: " + (fileName != null ? fileName : "Unknown file"), Toast.LENGTH_SHORT).show();
-    }
-
-    private void submitValidation() {
-        if (selectedDocumentUri == null) {
-            Toast.makeText(this, "Please select a proof of enrollment document first.", Toast.LENGTH_LONG).show();
-            // Ensure button remains disabled if somehow clicked when URI is null
-            btnSubmit.setEnabled(false);
+    private void submitDocumentUpdates() {
+        if (newProofUri == null && newSelfieUri == null) {
+            Toast.makeText(this, "Please select a new file to update.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Show loading/processing message
-        Toast.makeText(this, "Submitting validation request...", Toast.LENGTH_SHORT).show();
-        btnSubmit.setEnabled(false); // Disable during processing
-        btnSubmit.setText("Processing...");
+        btnSubmitUpdates.setEnabled(false);
+        btnSubmitUpdates.setText("Uploading...");
 
-        // TODO: Implement actual document upload to your server here
-        // This involves network calls (use Volley, Retrofit, etc.)
-        // and handling the file URI correctly (using ContentResolver)
-
-        processValidationSubmission(); // Keep simulation for now
+        // Upload Proof if selected
+        if (newProofUri != null) {
+            tvProofUploadStatus.setText("Uploading proof...");
+            tvProofUploadStatus.setVisibility(View.VISIBLE);
+            uploadFileAndUpdateProfile(newProofUri, "proof");
+        }
+        // Upload Selfie if selected (chain after proof or run in parallel carefully)
+        // For simplicity, we'll chain them. The second upload starts in the callback of the first.
+        else if (newSelfieUri != null) {
+            tvSelfieUploadStatus.setText("Uploading selfie...");
+            tvSelfieUploadStatus.setVisibility(View.VISIBLE);
+            uploadFileAndUpdateProfile(newSelfieUri, "selfie");
+        }
     }
 
-    // --- SIMULATION METHOD --- Replace with real upload logic ---
-    private void processValidationSubmission() {
-        // Simulate network request
-        new android.os.Handler(getMainLooper()).postDelayed(() -> {
-            // Simulate success or failure
-            boolean success = true; // Change to false to test failure
+    private void uploadFileAndUpdateProfile(Uri fileUri, String fileType) {
+        MultipartBody.Part filePart = getFilePartFromUri(fileUri, "imageFile");
+        if (filePart == null) {
+            Toast.makeText(this, "Error preparing " + fileType + " file.", Toast.LENGTH_SHORT).show();
+            resetSubmitButton(); // Re-enable submit button
+            return;
+        }
 
-            if (success) {
-                showValidationSuccess();
-            } else {
-                showValidationFailure();
+        apiService.uploadImage(filePart).enqueue(new Callback<UploadResponse>() {
+            @Override
+            public void onResponse(Call<UploadResponse> call, Response<UploadResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    String newUrl = response.body().imageUrl;
+                    Log.d("ValidationActivity", fileType + " uploaded: " + newUrl);
+
+                    // If proof was uploaded, check if selfie also needs uploading
+                    if (fileType.equals("proof")) {
+                        currentProofUrl = newUrl; // Store new URL locally
+                        tvProofUploadStatus.setText("Proof Uploaded!");
+                        newProofUri = null; // Mark as uploaded
+
+                        if (newSelfieUri != null) { // If selfie is pending, upload it now
+                            tvSelfieUploadStatus.setText("Uploading selfie...");
+                            tvSelfieUploadStatus.setVisibility(View.VISIBLE);
+                            uploadFileAndUpdateProfile(newSelfieUri, "selfie");
+                        } else {
+                            // Only proof was changed, now save to backend
+                            saveUrlsToBackend();
+                        }
+                    } else { // Selfie was uploaded
+                        currentSelfieUrl = newUrl;
+                        tvSelfieUploadStatus.setText("Selfie Uploaded!");
+                        newSelfieUri = null; // Mark as uploaded
+                        // Since we chained, both should be done now (or only selfie was changed)
+                        saveUrlsToBackend();
+                    }
+                } else {
+                    Toast.makeText(Validation.this, fileType + " upload failed. Server error.", Toast.LENGTH_SHORT).show();
+                    resetSubmitButton(); // Re-enable on failure
+                    if(fileType.equals("proof")) tvProofUploadStatus.setText("Upload Failed"); else tvSelfieUploadStatus.setText("Upload Failed");
+                }
             }
-            // Re-enable button regardless of success/failure after processing
-            btnSubmit.setText("Submit");
-            // Keep it disabled after successful submission? Or allow re-submission?
-            // btnSubmit.setEnabled(!success); // Example: Disable after success
-            btnSubmit.setEnabled(true); // Re-enable for now
 
-        }, 2000); // Simulate 2 second delay
+            @Override
+            public void onFailure(Call<UploadResponse> call, Throwable t) {
+                Toast.makeText(Validation.this, fileType + " upload network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                resetSubmitButton(); // Re-enable on failure
+                if(fileType.equals("proof")) tvProofUploadStatus.setText("Network Error"); else tvSelfieUploadStatus.setText("Network Error");
+            }
+        });
     }
 
-    private void showValidationSuccess() {
-        Toast.makeText(this, "Validation submitted! Confirmation within 24-48 hours.", Toast.LENGTH_LONG).show();
+    private void saveUrlsToBackend() {
+        String rfid = sessionManager.getUserRfid();
+        if (rfid == null) { /* Handle not logged in */ resetSubmitButton(); return; }
 
-        // Reset the form
-        selectedDocumentUri = null;
-        btnProofEnrollment.setText("📁  Proof of Enrollment / Registration");
-        btnSubmit.setEnabled(false); // Disable after successful submission
+        btnSubmitUpdates.setText("Saving...");
 
-        // Optionally navigate back after a short delay
-        new android.os.Handler(getMainLooper()).postDelayed(this::finish, 1500); // Close after 1.5s
+        UpdateUserRequest request = new UpdateUserRequest();
+        // Only send URLs if they were actually updated (check against fetched URLs or use newProof/SelfieUri flags)
+        // For simplicity, we send both potentially updated URLs from currentProofUrl/currentSelfieUrl
+        request.proof_of_enrollment_url = currentProofUrl;
+        request.selfie_url = currentSelfieUrl;
+
+
+        apiService.updateStudent(rfid, request).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(Validation.this, "Documents Updated Successfully!", Toast.LENGTH_SHORT).show();
+                    // Optionally refresh the whole status display
+                    // fetchValidationStatus();
+                    resetSubmitButton(); // Reset button text, keep disabled
+                    btnSubmitUpdates.setEnabled(false); // Ensure it's disabled after save
+                    tvProofUploadStatus.setVisibility(View.GONE); // Hide status texts
+                    tvSelfieUploadStatus.setVisibility(View.GONE);
+
+                } else {
+                    Toast.makeText(Validation.this, "Failed to save URLs to profile.", Toast.LENGTH_SHORT).show();
+                    resetSubmitButton();
+                    btnSubmitUpdates.setEnabled(true); // Allow retry on save failure
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                Toast.makeText(Validation.this, "Network error saving URLs: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                resetSubmitButton();
+                btnSubmitUpdates.setEnabled(true); // Allow retry on save failure
+            }
+        });
     }
 
-    private void showValidationFailure() {
-        Toast.makeText(this, "Submission failed. Please check connection and try again.", Toast.LENGTH_LONG).show();
-        // Button is re-enabled in processValidationSubmission's final block
+    private void resetSubmitButton() {
+        btnSubmitUpdates.setText("Save Document Updates");
+        // Only re-enable if there's still a pending upload (or on failure to allow retry)
+        btnSubmitUpdates.setEnabled(newProofUri != null || newSelfieUri != null);
     }
-    // --- END SIMULATION ---
 
-    // Utility method to get filename from URI
+
+    // --- Utility Methods ---
+    // (getFilePartFromUri and getFileName are the same as in SignUp.java)
+    private MultipartBody.Part getFilePartFromUri(Uri uri, String partName) {
+        try {
+            ContentResolver resolver = getContentResolver();
+            String fileName = getFileName(uri);
+            String mimeType = resolver.getType(uri);
+            File cacheDir = getCacheDir();
+            File tempFile = new File(cacheDir, fileName);
+            try (InputStream is = resolver.openInputStream(uri);
+                 OutputStream os = new FileOutputStream(tempFile)) {
+                byte[] buffer = new byte[1024];
+                int len;
+                while ((len = is.read(buffer)) > 0) {
+                    os.write(buffer, 0, len);
+                }
+            }
+            RequestBody requestFile = RequestBody.create(MediaType.parse(mimeType), tempFile);
+            return MultipartBody.Part.createFormData(partName, tempFile.getName(), requestFile);
+        } catch (Exception e) {
+            Log.e("ValidationActivity", "Error creating file part", e);
+            return null;
+        }
+    }
+
     private String getFileName(Uri uri) {
         String result = null;
         if (uri != null && "content".equals(uri.getScheme())) {
@@ -209,34 +381,22 @@ public class Validation extends AppCompatActivity {
                         result = cursor.getString(nameIndex);
                     }
                 }
-            } catch (Exception e) {
-                // Log error or handle gracefully
-                result = "File"; // Fallback name
-            }
+            } catch (Exception e) { Log.e("ValidationActivity", "Error getting filename", e); }
         }
         if (result == null && uri != null) {
             result = uri.getPath();
             if (result != null) {
                 int cut = result.lastIndexOf('/');
-                if (cut != -1) {
-                    result = result.substring(cut + 1);
-                }
-            } else {
-                result = "File"; // Fallback name
+                if (cut != -1) { result = result.substring(cut + 1); }
             }
         }
-        return result != null ? result : "File"; // Final fallback
+        return (result != null && !result.isEmpty()) ? result : "upload_file";
     }
+    // --- End Utility Methods ---
 
-    // Unused methods can be kept or removed
-    /*
-    public void updateUserInfo(String name, String id) { ... }
-    public boolean hasValidationDocument() { ... }
-    */
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        // Default behavior finishes the activity
     }
 }
